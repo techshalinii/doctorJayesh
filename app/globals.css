@@ -1,0 +1,283 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode driven by next-themes (adds `.dark` on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* ---- Brand: refined medical burgundy (primary), matched to the practice ---- */
+  --color-navy-50: #fbf2f1;
+  --color-navy-100: #f5ddda;
+  --color-navy-200: #ecbfba;
+  --color-navy-300: #dc958e;
+  --color-navy-400: #ca6a62;
+  --color-navy-500: #b5463f;
+  --color-navy-600: #9c332e;
+  --color-navy-700: #822a27;
+  --color-navy-800: #6a2422;
+  --color-navy-900: #501d1c;
+  --color-navy-950: #341210;
+
+  /* ---- Accent: warm rose-burgundy (links, marks, eyebrows) ---- */
+  --color-teal-50: #fdf1ef;
+  --color-teal-100: #fadbd4;
+  --color-teal-200: #f2b8ae;
+  --color-teal-300: #e6928a;
+  --color-teal-400: #d56a62;
+  --color-teal-500: #c14d46;
+  --color-teal-600: #a63a35;
+  --color-teal-700: #8a2f2c;
+  --color-teal-800: #722a28;
+  --color-teal-900: #5f2624;
+
+  /* ---- Warm highlight (for gentle gradients) ---- */
+  --color-cyan-300: #eaa89f;
+  --color-cyan-400: #d97f76;
+  --color-cyan-500: #c45f56;
+
+  /* ---- Champagne gold (awards / accents, used sparingly) ---- */
+  --color-gold-300: #f2e0aa;
+  --color-gold-400: #e6c97e;
+  --color-gold-500: #cfa451;
+  --color-gold-600: #ac862f;
+
+  /* Extra small-phone breakpoint (default Tailwind starts at sm=640px) */
+  --breakpoint-xs: 24rem;
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --radius-4xl: 2rem;
+  --radius-5xl: 2.75rem;
+
+  /* Soft, clean shadows — no heavy coloured glows */
+  --shadow-glow: 0 1px 2px rgb(15 42 74 / 0.05), 0 22px 48px -24px rgb(15 42 74 / 0.28);
+  --shadow-card: 0 1px 2px rgb(15 42 74 / 0.05), 0 12px 32px -16px rgb(15 42 74 / 0.14);
+  --shadow-soft: 0 1px 3px rgb(15 42 74 / 0.06), 0 16px 40px -22px rgb(15 42 74 / 0.14);
+  --shadow-teal: 0 10px 30px -12px rgb(39 103 172 / 0.28);
+
+  --animate-marquee: marquee 36s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+}
+
+:root {
+  --background: #fdfaf8;
+  --surface: #f7efeb;
+  --surface-2: #efe3dd;
+  --foreground: #2a1a18;
+  --muted: #7c655f;
+  --border: #ece0da;
+}
+
+.dark {
+  --background: #1a100f;
+  --surface: #241715;
+  --surface-2: #2e1c19;
+  --foreground: #f4ebe8;
+  --muted: #bfa8a3;
+  --border: #362321;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+  overflow-x: hidden; /* safety net against accidental horizontal scroll on mobile */
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---------- Reusable design utilities ---------- */
+@layer utilities {
+  .glass {
+    background: color-mix(in srgb, var(--background) 78%, transparent);
+    backdrop-filter: blur(16px) saturate(130%);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+  }
+
+  /* Restrained monochrome-blue gradient text */
+  .text-gradient {
+    background-image: linear-gradient(115deg, var(--color-navy-800) 0%, var(--color-navy-500) 60%, var(--color-teal-500) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .dark .text-gradient {
+    background-image: linear-gradient(115deg, #f2d3cd 0%, var(--color-teal-300) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .bg-brand-gradient {
+    background-image: linear-gradient(135deg, var(--color-navy-900) 0%, var(--color-navy-700) 100%);
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-navy-500) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-navy-500) 6%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(color-mix(in srgb, var(--color-navy-500) 12%, transparent) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .ring-hairline {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-navy-500) 10%, transparent);
+  }
+}
+
+/* ---------- Blog article typography ---------- */
+.article {
+  color: var(--muted);
+  font-size: 1.075rem;
+  line-height: 1.8;
+  /* The body is migrated WordPress markdown rendered through dangerouslySetInnerHTML, so
+     the token lengths are not controlled here. Nothing in the current 197 documents is
+     long enough to overflow (checked), but a pasted URL or a long drug/procedure name in
+     a future edit would push the 320px column sideways with no way to scroll it back.
+     Normal prose is unaffected — this only engages on a word that cannot otherwise fit. */
+  overflow-wrap: break-word;
+}
+.article > * + * { margin-top: 1.35rem; }
+.article p { max-width: 42rem; }
+.article h2,
+.article h3 {
+  color: var(--foreground);
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-top: 2.6rem;
+  line-height: 1.25;
+}
+.article h2 { font-size: 1.7rem; }
+.article h3 { font-size: 1.32rem; }
+.article ul,
+.article ol { max-width: 42rem; padding-left: 1.25rem; }
+.article ul { list-style: disc; }
+.article ol { list-style: decimal; }
+.article li { margin-top: 0.5rem; padding-left: 0.25rem; }
+.article li::marker { color: var(--color-teal-500); }
+.article a {
+  color: var(--color-teal-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.dark .article a { color: var(--color-teal-300); }
+.article blockquote {
+  border-left: 3px solid var(--color-teal-500);
+  padding: 0.25rem 0 0.25rem 1.5rem;
+  color: var(--foreground);
+  font-style: italic;
+}
+/* Body images: constrain to the column and keep the aspect ratio. Without this they render
+   at intrinsic size and overflow horizontally — see _migration/IMAGE-QUALITY.md cause C. */
+.article img {
+  max-width: 100%;
+  height: auto;
+}
+
+.article table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  display: block;
+  overflow-x: auto;
+}
+.article th,
+.article td {
+  border: 1px solid var(--border);
+  padding: 0.7rem 1rem;
+  text-align: left;
+  vertical-align: top;
+}
+.article th {
+  background: var(--surface);
+  color: var(--foreground);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------- Block types only CMS posts emit ----------
+   Migrated markdown never produced a figure, a code fence or an <hr>, so these rules
+   exist for lib/cms/blocks.ts output. They sit inside `.article` so both sources still
+   render through one set of prose styles. */
+.article .table-scroll { overflow-x: auto; }
+.article figure { margin-inline: 0; }
+.article figcaption {
+  margin-top: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.article hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin-block: 2.4rem;
+}
+.article pre {
+  overflow-x: auto;
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.article :not(pre) > code {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+
+/* Custom scrollbar — single calm blue */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-navy-400) 55%, transparent);
+  border-radius: 999px;
+  border: 3px solid var(--background);
+}
+::selection {
+  background: var(--color-teal-200);
+  color: var(--color-navy-900);
+}

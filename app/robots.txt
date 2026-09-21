@@ -1,0 +1,22 @@
+# Static /robots.txt.
+#
+# Do not add app/robots.ts alongside this file: a generated route and this static file
+# define the same /robots.txt route, and only one may exist.
+#
+# The Sitemap URL below is hardcoded and must be kept in sync by hand with `siteUrl` in
+# lib/data.ts, which is what app/sitemap.ts uses to build the sitemap itself.
+#
+# The tag archives and /thank-you/ are deliberately left crawlable here. They are kept
+# out of the index with noindex metadata instead (lib/content.ts); a Disallow would stop
+# crawlers fetching them, so the noindex would never be seen.
+
+User-Agent: *
+Allow: /
+
+# The CMS dashboard. Behind a login and marked noindex in app/admin/layout.tsx, so a
+# Disallow is belt-and-braces rather than the only defence — but there is no reason to
+# spend crawl budget on a page that always redirects an anonymous visitor to a login.
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://drjayeshsardhara.com/sitemap.xml

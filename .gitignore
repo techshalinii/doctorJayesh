@@ -1,0 +1,58 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# migration working data — DELIBERATELY NOT COMMITTED
+#
+# _migration/ is the WordPress migration evidence and incident record. It stays on disk
+# but is never pushed, because it contains:
+#   - 01-xml/  the full WXR export, including the WordPress admin account recovery email
+#             (an unresolved account-takeover vector — see _migration/SECURITY-CHECKLIST.md)
+#   - 03-server-files/htaccess  the working Googlebot cloaking rule (a usable blueprint)
+#   - 05-crawl/  203 page captures containing the injected spam markup and hosting identifiers
+#
+# None of it is needed to build or run the site.
+/_migration/
+
+# NOTE: public/wp-content/uploads/ IS committed (2,008 files, ~250 MB after in-place
+# recompression). It was previously ignored in favour of R2; that is now opt-in only —
+# the rewrite in next.config.ts stays inert while R2_PUBLIC_BASE is unset.

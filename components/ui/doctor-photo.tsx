@@ -21,12 +21,12 @@ export function DoctorPhoto({
       <div className="absolute inset-x-0 top-0 h-1/2 bg-grid opacity-40 dark:opacity-20" />
       <div className="absolute -right-10 top-6 h-40 w-40 rounded-full bg-teal-400/15 blur-3xl" />
       <Image
-        src="/images/doctor_img.png"
+        src="/images/doctor.png"
         alt="Dr. Jayesh Sardhara, Neurosurgeon & Spine Surgeon"
         fill
         priority={priority}
         sizes={sizes}
-        className="object-cover object-top "
+        className="object-cover object-top scale-x-[-1] "
       />
     </div>
   );

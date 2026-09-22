@@ -42,6 +42,24 @@ export const doctor = {
   opd: "Mon – Sat · 11:00 AM – 4:00 PM",
 };
 
+/**
+ * The doctor's own profiles. Supplied 2026-09-22; until then the footer's icons all
+ * pointed at `href="#"`.
+ *
+ * Declared here rather than in the footer because they have a second consumer: they are
+ * the `sameAs` array on the Physician entity in <JsonLd>, which is how a search engine
+ * ties these accounts to the practice. Adding a profile in one place updates both.
+ *
+ * There is no X/Twitter account, so the footer has no X icon — a dead `#` link is worse
+ * than an absent one, and an empty `sameAs` entry would be a claim about an account that
+ * does not exist.
+ */
+export const socialLinks: { label: string; href: string }[] = [
+  { label: "LinkedIn", href: "https://in.linkedin.com/in/dr-jayesh-sardhara-235b1a90" },
+  { label: "Instagram", href: "https://www.instagram.com/jayeshinsta_/" },
+  { label: "YouTube", href: "https://www.youtube.com/@dr.jayeshsardhara341" },
+];
+
 export const locations = [
   {
     name: "Fortis Hospital, Mulund",

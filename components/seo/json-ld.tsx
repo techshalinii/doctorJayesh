@@ -1,4 +1,4 @@
-import { doctor, siteUrl, locations } from "@/lib/data";
+import { doctor, siteUrl, locations, socialLinks } from "@/lib/data";
 import { canonicalUrl } from "@/lib/seo";
 
 export function JsonLd() {
@@ -10,6 +10,9 @@ export function JsonLd() {
     medicalSpecialty: ["Neurosurgery", "Spine Surgery"],
     description: doctor.intro,
     url: siteUrl,
+    // The profiles a search engine uses to tie these accounts to this entity. Same array
+    // the footer renders, so a profile is never listed here while missing there.
+    sameAs: socialLinks.map((s) => s.href),
     telephone: doctor.phoneRaw,
     email: doctor.email,
     priceRange: "₹₹₹",

@@ -66,7 +66,7 @@ const LEARN_MORE =
 
 export function Conditions() {
   return (
-    <section className="border-y border-border bg-surface/50 py-14 lg:py-18" id="conditions">
+    <section className="py-14 lg:py-18" id="conditions">
       <Container>
         <SectionHeading
           layout="split"

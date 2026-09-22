@@ -40,14 +40,29 @@ export default function HomePage() {
           6 conditions · 7 why choose (+video) · 8 Fortis Institute (+video) · 9 honours
           10 video gallery · 11 blog · 12 FAQs · 13 reviews
         <TrustStats> and <Expertise> are ours, not the export's — see the notes below.
+
+        Backgrounds alternate strictly down the page, every section owning its own band
+        class: tinted is `border-y border-border bg-surface/50`, plain is no background and
+        no border — the tinted neighbours on either side draw the seam, so a plain section
+        adding its own `border-t` would double the rule. <Hero> stays plain, which is why
+        the run starts tinted at <FortisInstitute>; the run ends plain at <AppointmentCTA>
+        so it does not sit flush against the footer's `bg-surface`.
+
+          tinted  Fortis · AwardsGallery · Expertise · Awards · Resources · Testimonials
+          plain   BookAppointment · Conditions · WhyChoose · Videos · Faqs · AppointmentCTA
+
+        Reordering or adding a section means re-checking the run — the alternation lives in
+        the components, not in a wrapper here, so nothing recomputes it automatically.
       */}
       <Hero />
      
       {/* <About /> */}
       <FortisInstitute />
       <BookAppointment />
-      {/* Live section 5 — "Sits immediately after the appointment form" (home-content.json). */}
-      <AwardsGallery className="border-t border-border py-12 lg:py-14" />
+      {/* Live section 5 — "Sits immediately after the appointment form" (home-content.json).
+          The band class is passed from here because <AwardsGallery> also renders on
+          /news-awards/, where it is not part of this alternation. */}
+      <AwardsGallery className="border-y border-border bg-surface/50 py-12 lg:py-14" />
       <Conditions />
       {/* Not an export section — the live homepage had no expertise block. Kept because it
           carries the only homepage links into /brain-surgery/ and /spine-surgery/, and sits

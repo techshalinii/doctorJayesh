@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { SITE_URL } from "@/lib/supabase/config";
 
 /**
- * Appointment request -> email.
+ * Appointment request -> email, via FormSubmit (https://formsubmit.co).
  *
  * Until this route existed, <AppointmentForm> called preventDefault(), waited 1100ms on a
  * setTimeout and showed "Request received. Our care team will call you shortly." Nothing
@@ -9,32 +10,36 @@ import { NextResponse } from "next/server";
  * "Second Opinion" that is worse than having no form at all, because the patient believes
  * a clinic now holds their details.
  *
- * Resend is called over its REST API with plain fetch rather than the `resend` package —
- * one POST, no dependency to keep current.
+ * FormSubmit needs no API key and no verified sending domain — it relays to the inbox named
+ * in the endpoint path. This route calls its `/ajax/` endpoint server-side rather than
+ * pointing the <form> action at it, so the honeypot, the length caps and the field
+ * validation below still run on a POST that skips the browser, and the browser never has to
+ * deal with FormSubmit's CORS or its redirect-based non-AJAX flow.
  *
- * The route never reports success it cannot back up: if the key is missing or Resend
- * rejects the send, it returns an error and the form surfaces it with the practice's phone
- * number. A silent failure here reintroduces the original bug in a subtler form.
+ * ACTIVATION: the very first submission to a new address makes FormSubmit email that
+ * address a confirmation link. Nothing is delivered until someone clicks it — so after
+ * deploying (or after changing APPOINTMENT_TO) submit the form once and confirm from the
+ * inbox. Until then FormSubmit answers 200 with `success: "false"` and the activation
+ * message, which this route treats as the failure it is: the visitor sees the phone-number
+ * fallback rather than a confirmation for mail nobody received. Switching APPOINTMENT_TO
+ * to the hashed token FormSubmit issues after activation keeps the address out of the
+ * request URL.
+ *
+ * The route never reports success it cannot back up: if FormSubmit rejects the relay, it
+ * returns an error and the form surfaces it with the practice's phone number. A silent
+ * failure here reintroduces the original bug in a subtler form.
  */
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const RESEND_ENDPOINT = "https://api.resend.com/emails";
-
 /**
- * Overridable so staging can divert mail without a code change. The default is the
- * practice's address, so a deploy that sets only RESEND_API_KEY still works.
+ * Overridable so staging can divert mail without a code change. Accepts either the
+ * destination address or the hashed token FormSubmit issues once it is activated.
  */
-const TO = process.env.APPOINTMENT_TO ?? "nextdot.agency@gmail.com";
+const TO = process.env.APPOINTMENT_TO ?? "shalini09142@gmail.com";
 
-/**
- * Resend refuses any `from` outside a verified domain. `onboarding@resend.dev` is their
- * shared sender, which only delivers to the Resend account owner's own address — fine when
- * that account is the destination inbox, but set APPOINTMENT_FROM to an address on a
- * verified domain before pointing TO anywhere else.
- */
-const FROM = process.env.APPOINTMENT_FROM ?? "Appointments <onboarding@resend.dev>";
+const FORMSUBMIT_ENDPOINT = `https://formsubmit.co/ajax/${encodeURIComponent(TO)}`;
 
 const LIMITS = { name: 120, phone: 40, email: 160, service: 80, date: 40, message: 4000 } as const;
 
@@ -78,53 +83,68 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "That email address looks wrong." }, { status: 400 });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    // Loud on the server, vague to the visitor — they cannot act on a missing deploy key.
-    console.error("[appointment] RESEND_API_KEY is not set; submission was not delivered.");
-    return NextResponse.json(
-      { ok: false, error: "We could not send your request just now. Please call us instead." },
-      { status: 503 },
-    );
-  }
+  /**
+   * Keys become the labels in the email FormSubmit composes, so they are written the way
+   * the practice should read them. The `_`-prefixed ones are FormSubmit's own controls:
+   * `_subject` names the thread, `_template: "table"` lays the fields out as a table, and
+   * `_captcha: "false"` skips the challenge page — which the non-AJAX flow shows to the
+   * visitor and which a server-side POST could never satisfy anyway.
+   */
+  const payload: Record<string, string> = {
+    _subject: `Appointment request — ${name}${service ? ` (${service})` : ""}`,
+    _template: "table",
+    _captcha: "false",
+    Name: name,
+    Phone: phone,
+    Email: email || "(not given)",
+    Service: service || "(not selected)",
+    "Preferred date": date || "(no preference)",
+    Message: message || "(none)",
+    Submitted: new Date().toISOString(),
+  };
 
-  const lines = [
-    `Name:    ${name}`,
-    `Phone:   ${phone}`,
-    `Email:   ${email || "(not given)"}`,
-    `Service: ${service || "(not selected)"}`,
-    `Date:    ${date || "(no preference)"}`,
-    "",
-    "Message:",
-    message ? message.replace(/^/gm, "  ") : "  (none)",
-    "",
-    `Submitted ${new Date().toISOString()}`,
-  ];
+  // So hitting Reply in the inbox goes to the patient, not to FormSubmit's relay address.
+  if (email) payload._replyto = email;
 
   try {
-    const res = await fetch(RESEND_ENDPOINT, {
+    const res = await fetch(FORMSUBMIT_ENDPOINT, {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: FROM,
-        to: [TO],
-        // So hitting Reply in the inbox goes to the patient, not to the sender address.
-        ...(email ? { reply_to: email } : {}),
-        subject: `Appointment request — ${name}${service ? ` (${service})` : ""}`,
-        text: lines.join("\n"),
-      }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        /**
+         * Required. FormSubmit rejects a request with no origin — "Make sure you open this
+         * page through a web server, FormSubmit will not work in pages browsed as HTML
+         * files" — and a server-side fetch sends none unless it is set here. Verified
+         * against the live endpoint: without these two the relay never happens.
+         */
+        Origin: SITE_URL,
+        Referer: `${SITE_URL}/appointment/`,
+      },
+      body: JSON.stringify(payload),
     });
 
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      console.error("[appointment] Resend rejected the send:", res.status, detail.slice(0, 500));
+    const result: { success?: boolean | string; message?: string } = await res
+      .json()
+      .catch(() => ({}));
+
+    // FormSubmit has returned `success` as both the boolean and the string "true"; accept
+    // either, and treat anything else as a failure rather than assuming delivery.
+    const delivered = res.ok && String(result.success) === "true";
+
+    if (!delivered) {
+      console.error(
+        "[appointment] FormSubmit rejected the relay:",
+        res.status,
+        (result.message ?? "").slice(0, 500),
+      );
       return NextResponse.json(
         { ok: false, error: "We could not send your request just now. Please call us instead." },
         { status: 502 },
       );
     }
   } catch (err) {
-    console.error("[appointment] Could not reach Resend:", err);
+    console.error("[appointment] Could not reach FormSubmit:", err);
     return NextResponse.json(
       { ok: false, error: "We could not send your request just now. Please call us instead." },
       { status: 502 },

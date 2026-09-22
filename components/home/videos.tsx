@@ -22,7 +22,7 @@ export function Videos() {
   if (!items?.length) return null;
 
   return (
-    <section className="border-t border-border py-14 lg:py-18" id="videos">
+    <section className="py-14 lg:py-18" id="videos">
       <Container>
         <SectionHeading
           layout="split"

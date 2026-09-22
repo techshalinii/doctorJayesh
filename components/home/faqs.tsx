@@ -16,7 +16,7 @@ import { homeFaqs } from "@/lib/data";
  */
 export function Faqs() {
   return (
-    <section className="border-t border-border py-14 lg:py-18" id="faqs">
+    <section className="py-14 lg:py-18" id="faqs">
       <Container>
         <div className="grid gap-x-16 gap-y-8 lg:grid-cols-12">
           <div className="lg:col-span-4">

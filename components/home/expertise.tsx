@@ -31,7 +31,7 @@ const PHOTOS = [
 
 export function Expertise() {
   return (
-    <section className="py-16 lg:py-24" id="expertise">
+    <section className="border-y border-border bg-surface/50 py-16 lg:py-24" id="expertise">
       <Container>
         <div className="grid gap-8 md:grid-cols-2 md:items-end">
           <SectionHeading

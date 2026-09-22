@@ -148,14 +148,14 @@ export function AwardsGallery({ className }: { className?: string }) {
             onClick={(e) => {
               if (e.target === e.currentTarget) close();
             }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-navy-950/90 p-6 backdrop-blur-sm sm:p-10 lg:p-12"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/20 backdrop-blur-md sm:p-10 lg:p-12"
           >
             <button
               ref={closeRef}
               type="button"
               onClick={close}
               aria-label="Close"
-              className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full text-white/80 ring-1 ring-white/20 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 sm:right-6 sm:top-6"
+              className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-black ring-1 ring-black/10 shadow-sm transition-colors hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 sm:right-6 sm:top-6"
             >
               <X className="h-5 w-5" aria-hidden />
             </button>
@@ -165,7 +165,7 @@ export function AwardsGallery({ className }: { className?: string }) {
                 type="button"
                 onClick={() => step(-1)}
                 aria-label="Previous photograph"
-                className="absolute left-2 inline-flex h-11 w-11 items-center justify-center rounded-full text-white/80 ring-1 ring-white/20 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 sm:left-6"
+                className="absolute left-2 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-black ring-1 ring-black/10 shadow-sm transition-colors hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 sm:left-6"
               >
                 <ChevronLeft className="h-6 w-6" aria-hidden />
               </button>
@@ -191,7 +191,7 @@ export function AwardsGallery({ className }: { className?: string }) {
                   className="object-contain"
                 />
               </div>
-              <figcaption className="mt-3 text-center text-sm text-white/75">{current.alt}</figcaption>
+              <figcaption className="mt-3 text-center text-sm font-medium text-black/80">{current.alt}</figcaption>
             </figure>
 
             {count > 1 && (
@@ -199,7 +199,7 @@ export function AwardsGallery({ className }: { className?: string }) {
                 type="button"
                 onClick={() => step(1)}
                 aria-label="Next photograph"
-                className="absolute right-2 inline-flex h-11 w-11 items-center justify-center rounded-full text-white/80 ring-1 ring-white/20 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 sm:right-6"
+                className="absolute right-2 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-black ring-1 ring-black/10 shadow-sm transition-colors hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 sm:right-6"
               >
                 <ChevronRight className="h-6 w-6" aria-hidden />
               </button>

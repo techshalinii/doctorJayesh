@@ -14,11 +14,24 @@ import { AppointmentForm } from "@/components/forms/appointment-form";
  */
 export function BookAppointment() {
   return (
-    <section className="border-t border-border py-16 lg:py-20" id="book_now">
-      <Container className="max-w-3xl">
-        <SectionHeading eyebrow="Appointments" title="Book Appointment" />
-        <div className="mt-10">
-          <AppointmentForm />
+    /* The form runs as a wide grid here rather than the default stack, so the band needs
+       less height and less measure-limiting than it did: max-w-3xl could not fit four
+       fields on a row, and the old py-16/py-20 was sized for a form twice as tall. */
+    <section className="py-12 lg:py-16" id="book_now">
+      {/* max-w-6xl, not the section default: at the full 1600px the paired fields stretch
+          past 700px each. This lands them near 500px, the width the design calls for. */}
+      <Container className="max-w-6xl">
+        <SectionHeading
+          align="center"
+          eyebrow="Appointments"
+          title="Book Appointment"
+          description="Take the first step towards better health. Schedule your appointment with our specialists."
+        />
+        {/* `compact` is passed only here. /appointment/, /contact-us/ and <AppointmentCTA>
+            render the same component with no prop and keep the stacked layout — the class
+            below marks this instance as the one that owns the compact grid. */}
+        <div className="home-appointment-form mt-8">
+          <AppointmentForm variant="compact" />
         </div>
       </Container>
     </section>

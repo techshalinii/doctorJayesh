@@ -12,10 +12,10 @@ const metrics = [
 
 export function Awards() {
   return (
-    <section className="py-16 lg:py-24" id="awards">
+    <section className="border-y border-border bg-surface/50 py-16 lg:py-24" id="awards">
       <Container className="grid gap-14 lg:grid-cols-12 lg:gap-16">
         {/* left intro + metrics */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-6">
           <div className="lg:sticky lg:top-28">
             {/* "Honours and Awards" is the live WordPress section 9 heading, verbatim. */}
             <SectionHeading index="04" eyebrow="Awards & Recognition" title="Honours and Awards" />
@@ -38,7 +38,7 @@ export function Awards() {
         </div>
 
         {/* right timeline list */}
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-6">
           <div className="border-t border-navy-900/12 dark:border-white/12">
             {/* Teaser: 4 of 10. The full list is at /news-awards/, linked above. */}
             {awards.slice(0, 4).map((a, i) => (

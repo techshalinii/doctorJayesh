@@ -13,7 +13,7 @@ import { whyChooseSardhara, homeInlineVideos } from "@/lib/data";
  */
 export function WhyChoose() {
   return (
-    <section className="py-14 lg:py-18">
+    <section id="whychooseus" className="py-14 lg:py-18">
       <Container>
         <SectionHeading
           layout="split"

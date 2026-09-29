@@ -3,9 +3,6 @@ import { requireAdmin, UNAUTHORIZED } from "@/lib/admin/auth-server";
 import { getAIProvider, AIError, aiErrorResponse } from "@/lib/ai";
 import { loadProfile, readText } from "@/lib/ai/request";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-export const maxDuration = 120;
 
 export async function POST(request: Request) {
   const session = await requireAdmin(request);

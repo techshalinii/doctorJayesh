@@ -9,9 +9,6 @@ import { toSlug } from "@/lib/cms/markdown-import";
 import { PROMPT_VERSION } from "@/lib/ai/version";
 import type { GenerationOutcome } from "@/lib/ai/pipeline";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-export const maxDuration = 800;
 
 const MAX_PER_RUN = 6;
 

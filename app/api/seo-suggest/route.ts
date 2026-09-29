@@ -13,7 +13,6 @@ import { CMS_ENABLED, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supab
 import { getAIProvider } from "@/lib/ai";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
 
 async function askClaude(prompt: string): Promise<string[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;

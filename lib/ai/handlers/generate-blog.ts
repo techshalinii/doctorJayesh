@@ -8,9 +8,6 @@ import { retrievalBreakdown, retrieveRelevant } from "@/lib/ai/retrieval";
 import { toSlug } from "@/lib/cms/markdown-import";
 import { PROMPT_VERSION } from "@/lib/ai/version";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-export const maxDuration = 300;
 
 export async function POST(request: Request) {
   const session = await requireAdmin(request);

@@ -9,9 +9,6 @@ import { PROMPT_VERSION } from "@/lib/ai/version";
 import { candidatePoolSize, selectBalancedTopics } from "@/lib/ai/topics";
 import type { ScoredTopic } from "@/lib/ai/types";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-export const maxDuration = 180;
 
 export async function POST(request: Request) {
   const session = await requireAdmin(request);

@@ -6,9 +6,6 @@ import { findSimilar } from "@/lib/ai/similarity";
 import { existingTitles } from "@/lib/cms/content-brain";
 import { AI_ESTIMATE_DISCLAIMER } from "@/lib/ai/labels";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const session = await requireAdmin(request);

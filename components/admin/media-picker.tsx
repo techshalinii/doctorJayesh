@@ -7,16 +7,6 @@ import { deleteMedia, listMedia, uploadMedia } from "@/lib/admin/api";
 import type { MediaRow } from "@/lib/cms/types";
 import { AdminButton, Banner, Modal } from "@/components/admin/ui";
 
-/**
- * Pick an existing upload or add a new one.
- *
- * Used for the featured image and reused whole as the Media page's body — one
- * implementation of upload, listing and delete rather than two that drift.
- *
- * Thumbnails use a plain <img>, not next/image: these are Supabase URLs inside an admin
- * screen, and routing them through the optimiser would spend transform budget on
- * pictures only two people will ever look at.
- */
 export function MediaLibrary({
   onSelect,
   selectedUrl,
@@ -30,8 +20,6 @@ export function MediaLibrary({
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    // `alive` stops a slow response from setting state on an unmounted picker, and the
-    // promise form keeps every update off the effect's synchronous path.
     let alive = true;
     listMedia()
       .then((rows) => {
@@ -153,7 +141,6 @@ export function MediaLibrary({
   );
 }
 
-/** Featured-image field: preview, alt text, and a picker in a modal. */
 export function FeaturedImagePicker({
   url,
   alt,
@@ -169,7 +156,6 @@ export function FeaturedImagePicker({
     <div className="flex flex-col gap-2">
       {url ? (
         <div className="relative overflow-hidden rounded-md border border-border">
-          {/* Sized by the container; `unoptimized` for the same reason as above. */}
           <NextImage
             src={url}
             alt={alt || "Featured image"}
@@ -206,9 +192,6 @@ export function FeaturedImagePicker({
           <MediaLibrary
             selectedUrl={url}
             onSelect={(item) => {
-              // The upload's own alt text is used as a starting point when the field is
-              // still empty — an image with no alt is an accessibility defect, and the
-              // SEO checklist will not catch it.
               onChange({ url: item.url, alt: alt || item.alt });
               setOpen(false);
             }}

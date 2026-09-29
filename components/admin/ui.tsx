@@ -4,14 +4,6 @@ import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { BlogStatus } from "@/lib/cms/types";
 
-/**
- * Small shared pieces for the dashboard.
- *
- * Kept apart from `components/ui/*`, which is the public site's design system. The
- * dashboard is a dense working tool, not a patient-facing page — its controls are
- * smaller, tighter and plainer, and mixing the two vocabularies would degrade both.
- */
-
 export function Field({
   label,
   hint,
@@ -84,11 +76,6 @@ const STATUS_STYLES: Record<BlogStatus, string> = {
   archived: "bg-slate-50 text-slate-400 ring-slate-200",
 };
 
-/**
- * `status` alone is not the whole truth: a row marked `published` with a future
- * `publish_at` is not public yet. The badge says so rather than letting the author
- * believe a post is live when the visibility rule disagrees.
- */
 export function StatusBadge({ status, live }: { status: BlogStatus; live?: boolean }) {
   const label =
     status === "published" && live === false ? "Published · pending" : status;
@@ -148,14 +135,6 @@ export function Banner({
   );
 }
 
-/**
- * Close-on-Escape for a dialog.
- *
- * Listens on `document`, not on the overlay element: a keydown only reaches a DOM node
- * that has focus, and an overlay div has none unless something inside it was clicked
- * first — so the obvious `onKeyDown` on the backdrop silently does nothing most of the
- * time.
- */
 export function useEscapeKey(onClose: () => void): void {
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -166,7 +145,6 @@ export function useEscapeKey(onClose: () => void): void {
   }, [onClose]);
 }
 
-/** Centred overlay. `onClose` fires on backdrop click and on Escape. */
 export function Modal({
   title,
   onClose,

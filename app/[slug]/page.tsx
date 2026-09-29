@@ -30,41 +30,12 @@ import { cmsMetadata } from "@/lib/cms/metadata";
 import { cmsPostJsonLd } from "@/lib/cms/jsonld";
 import { canonicalUrl } from "@/lib/seo";
 
-/**
- * Root-level content: the 197 migrated WordPress documents, plus every post written
- * in the CMS since.
- *
- * WordPress served every blog post at `/{slug}/`, so posts stay at the root rather than
- * moving under `/blog/` — see _migration/url-map-notes.md Q1. Static segments take
- * precedence over this dynamic one, so `/about`, `/blog` etc. still resolve to their own
- * hand-built routes.
- *
- * A slug the migrated markdown owns is served from markdown, always — `getCmsPostForRoute()`
- * refuses to return a CMS row for one. Those URLs are indexed and carry backlinks; a new
- * post must not be able to take one over.
- */
-
-/**
- * `true`, where the migrated-only version of this route had `false`.
- *
- * A post scheduled for next Tuesday is not in `generateStaticParams()` at build time,
- * so with `false` it would 404 on the day it goes live. With `true` its slug is rendered
- * on first request instead. Unknown slugs still 404 for real: the body below calls
- * `notFound()` when neither source has the slug, which emits a 404 status — not a soft
- * 200 with an empty page.
- */
 export const dynamicParams = true;
 
-/**
- * Regenerated at most once a minute. This is the mechanism by which a scheduled post
- * appears without any row changing — see lib/cms/visibility.ts.
- */
 export const revalidate = 60;
 
 export async function generateStaticParams() {
   const migrated = getDynamicRootDocs().map((d) => ({ slug: d.fileSlug }));
-  // Prerender the posts that are already live. Anything scheduled for later is picked
-  // up on demand once `dynamicParams` lets the request through.
   const cms = (await getCmsSlugs()).map((slug) => ({ slug }));
   const seen = new Set(migrated.map((m) => m.slug));
   return [...migrated, ...cms.filter((c) => !seen.has(c.slug))];
@@ -88,12 +59,9 @@ export default async function MigratedPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const doc = getDocByFileSlug(slug);
 
-  // ---- CMS posts ----
-  // Reached only when no migrated document claims the slug, so markdown always wins.
   if (!doc) {
     const post = await getCmsPostForRoute(slug);
     if (!post) {
-      // Before giving up: this may be a slug a post has since moved away from.
       const movedTo = await getCmsRedirectTarget(slug);
       if (movedTo) permanentRedirect(`/${movedTo}/`);
       notFound();
@@ -113,10 +81,8 @@ export default async function MigratedPage({ params }: { params: Promise<{ slug:
 
   if (doc.postType === "post_tag") notFound();
 
-  // <PageHero> / the article header already render the <h1> — see stripLeadingH1.
   const html = renderMarkdown(stripLeadingH1(doc.body));
 
-  // ---- migrated WordPress pages (no article chrome) ----
   if (doc.postType === "page") {
     return (
       <>
@@ -125,7 +91,6 @@ export default async function MigratedPage({ params }: { params: Promise<{ slug:
         <section className="py-12 lg:py-14">
           <Container className="max-w-3xl">
             <div className="article" dangerouslySetInnerHTML={{ __html: html }} />
-            {/* Videos migrated from this page's Elementor widgets. */}
             {videos[doc.fileSlug]?.length ? (
               <div className="mt-14 grid gap-8 sm:grid-cols-2">
                 {videos[doc.fileSlug].map((v) => (
@@ -140,7 +105,6 @@ export default async function MigratedPage({ params }: { params: Promise<{ slug:
     );
   }
 
-  // ---- migrated blog posts ----
   const summary = toPostSummary(doc);
   const others = getPosts().filter((p) => p.fileSlug !== doc.fileSlug);
   const related = (

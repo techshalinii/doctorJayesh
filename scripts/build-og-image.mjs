@@ -1,20 +1,3 @@
-/**
- * Generates public/og-image.png — the 1200x630 social card used as the site-wide
- * `og:image` / `twitter:image`.
- *
- * Checked in as a script rather than hand-made in an image editor so the card can be
- * regenerated when the portrait, the palette or the doctor's details change:
- *
- *   node scripts/build-og-image.mjs
- *
- * Every string it draws is read from lib/data.ts at the top of this file — nothing is
- * typed in twice and nothing is invented. The palette values are the same custom
- * properties app/globals.css defines (--color-navy-950 / -900 / -100, --color-teal-300),
- * and the mark is public/logo.png, so the card cannot drift from the site's own design.
- *
- * `sharp` is already a transitive dependency of Next's image optimiser, so this adds
- * nothing to package.json.
- */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,7 +5,6 @@ import sharp from "sharp";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Pull the literals straight out of lib/data.ts so this file states no facts of its own. */
 const data = fs.readFileSync(path.join(ROOT, "lib/data.ts"), "utf8");
 const field = (key) => {
   const m = data.match(new RegExp(`\\n  ${key}: "([^"]+)"`));
@@ -39,11 +21,10 @@ if (!CLINIC) throw new Error("lib/data.ts: could not read the primary clinic nam
 const W = 1200;
 const H = 630;
 
-// app/globals.css — the palette is a warm maroon family despite the legacy "navy"/"teal" names.
-const INK = "#341210"; // --color-navy-950
-const INK_2 = "#501d1c"; // --color-navy-900
-const ACCENT = "#e6928a"; // --color-teal-300
-const SOFT = "#f5ddda"; // --color-navy-100
+const INK = "#341210";
+const INK_2 = "#501d1c";
+const ACCENT = "#e6928a";
+const SOFT = "#f5ddda";
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const FONT = "Segoe UI, Helvetica Neue, Arial, sans-serif";
@@ -74,11 +55,6 @@ const text = Buffer.from(`
   </g>
 </svg>`);
 
-/**
- * The portrait is a genuine cut-out (65.7% of its pixels are fully transparent), so it
- * composites onto the gradient without a matte. `inside` keeps its aspect ratio; it is
- * bottom-aligned so the figure stands on the card's lower edge rather than floating.
- */
 const portrait = await sharp(path.join(ROOT, "public/images/Dr-Image1.png"))
   .resize({ width: 470, height: 560, fit: "inside" })
   .toBuffer();

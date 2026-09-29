@@ -5,15 +5,6 @@ import { readTimeFromBlocks } from "@/lib/cms/blocks";
 import { isVisible } from "@/lib/cms/visibility";
 import type { BlogRow, BlogVersionRow, CategoryRow, MediaRow } from "@/lib/cms/types";
 
-/**
- * Everything the dashboard does to the database.
- *
- * All of it runs in the browser as the logged-in user, so every call is authorised by
- * that user's JWT and checked by the `blogs_admin_all` policy. There is no privileged
- * key here and no server action to impersonate one — sign out and these calls stop
- * working, which is the property that makes an admin UI safe to ship as client code.
- */
-
 function db() {
   return supabaseBrowser();
 }
@@ -22,23 +13,24 @@ function fail(error: { message: string } | null, what: string): void {
   if (error) throw new Error(`${what}: ${error.message}`);
 }
 
-/* ── reads ──────────────────────────────────────────────────────────────────── */
+const LIST_COLUMNS = [
+  "id", "title", "slug", "previous_slugs", "excerpt", "featured_image", "image_alt",
+  "category", "tags", "seo_title", "meta_description", "focus_keyword", "canonical_url",
+  "og_image", "twitter_image", "read_time", "author", "status", "publish_at",
+  "published_at", "time_zone", "related_blogs", "faq", "version", "created_at",
+  "updated_at", "created_by", "updated_by", "created_by_email",
+].join(",");
 
-/**
- * The full list, including drafts and archived posts — the admin sees everything.
- *
- * Ordered by `publish_at` descending, NOT `updated_at`. Sorting by last-touched makes
- * the table reshuffle every time anything is saved, and pushes a post you just fixed a
- * typo in above one published this morning.
- */
-export async function listBlogs(): Promise<BlogRow[]> {
+export type BlogListItem = Omit<BlogRow, "content">;
+
+export async function listBlogs(): Promise<BlogListItem[]> {
   const { data, error } = await db()
     .from("blogs")
-    .select("*")
+    .select(LIST_COLUMNS)
     .order("publish_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
   fail(error, "Could not load posts");
-  return (data ?? []) as BlogRow[];
+  return (data ?? []) as unknown as BlogListItem[];
 }
 
 export async function getBlog(id: string): Promise<BlogRow | null> {
@@ -47,14 +39,6 @@ export async function getBlog(id: string): Promise<BlogRow | null> {
   return (data as BlogRow) ?? null;
 }
 
-/**
- * Ordered by `sort_order`, then name.
- *
- * The topic list is deliberately not alphabetical — it groups the two surgical
- * specialities first, then conditions, then body regions — so the stored order is what
- * the dropdown and the blog filter follow. A category created in /admin gets the
- * default 1000 and lands at the end until someone gives it a place.
- */
 export async function listCategories(): Promise<CategoryRow[]> {
   const { data, error } = await db()
     .from("categories")
@@ -74,19 +58,18 @@ export async function listMedia(): Promise<MediaRow[]> {
   return (data ?? []) as MediaRow[];
 }
 
-export async function listVersions(blogId: string): Promise<BlogVersionRow[]> {
+export type BlogVersionSummary = Omit<BlogVersionRow, "snapshot"> & { title: string | null };
+
+export async function listVersions(blogId: string): Promise<BlogVersionSummary[]> {
   const { data, error } = await db()
     .from("blog_versions")
-    .select("*")
+    .select("id,blog_id,version,note,created_at,created_by,title:snapshot->>title")
     .eq("blog_id", blogId)
     .order("version", { ascending: false });
   fail(error, "Could not load version history");
-  return (data ?? []) as BlogVersionRow[];
+  return (data ?? []) as unknown as BlogVersionSummary[];
 }
 
-/* ── writes ─────────────────────────────────────────────────────────────────── */
-
-/** Columns the editor owns. Anything else is set by the database or by this module. */
 export type BlogInput = Partial<
   Pick<
     BlogRow,
@@ -121,18 +104,6 @@ export async function createBlog(input: BlogInput): Promise<BlogRow> {
   return data as BlogRow;
 }
 
-/**
- * Save an edit, snapshotting what was there first.
- *
- * The snapshot is written BEFORE the update so a restore always has something to go
- * back to, and it carries the version number that was current at the time — the row's
- * `version` is then bumped, so "version 4" in the history is the state the post was in
- * while it was at version 4.
- *
- * If the snapshot insert fails the update still proceeds: losing the ability to undo is
- * bad, but refusing to save the author's work because the audit trail is unavailable is
- * worse.
- */
 export async function updateBlog(id: string, input: BlogInput, note = ""): Promise<BlogRow> {
   const user = await currentUser();
   const previous = await getBlog(id);
@@ -148,8 +119,6 @@ export async function updateBlog(id: string, input: BlogInput, note = ""): Promi
     if (error) console.warn("[admin] version snapshot failed:", error.message);
   }
 
-  // A slug that changes on a post that has been live keeps the old value, so the old
-  // URL keeps resolving — see getCmsRedirectTarget().
   const previousSlugs = new Set(previous?.previous_slugs ?? []);
   if (previous && input.slug && input.slug !== previous.slug && hasBeenLive(previous)) {
     previousSlugs.add(previous.slug);
@@ -172,8 +141,7 @@ export async function updateBlog(id: string, input: BlogInput, note = ""): Promi
   return data as BlogRow;
 }
 
-/** Has this post ever been reachable by the public? Drives slug freezing. */
-export function hasBeenLive(post: BlogRow): boolean {
+export function hasBeenLive(post: BlogListItem): boolean {
   return Boolean(post.published_at) || isVisible(post);
 }
 
@@ -182,18 +150,13 @@ export async function deleteBlog(id: string): Promise<void> {
   fail(error, "Could not delete post");
 }
 
-/**
- * Copy a post as a fresh draft.
- *
- * Deliberately resets identity and schedule: a duplicate is a starting point, not a
- * second copy of a live article. Publishing one is a decision the author makes again.
- */
 export async function duplicateBlog(id: string): Promise<BlogRow> {
   const source = await getBlog(id);
   if (!source) throw new Error("Post not found");
 
   const base = `${source.slug}-copy`;
-  const existing = new Set((await listBlogs()).map((b) => b.slug));
+  const { data: slugRows } = await db().from("blogs").select("slug");
+  const existing = new Set((slugRows ?? []).map((b) => b.slug as string));
   let slug = base;
   for (let i = 2; existing.has(slug); i++) slug = `${base}-${i}`;
 
@@ -224,15 +187,7 @@ export async function duplicateBlog(id: string): Promise<BlogRow> {
   });
 }
 
-/**
- * Publish immediately.
- *
- * On a post that is ALREADY live, `publish_at` is left alone. Re-publishing after an
- * edit must not move the article to the top of the blog or change its sitemap date —
- * it was published when it was published. Only `published_at` is stamped on the first
- * transition, and that column never drives anything public.
- */
-export async function publishNow(post: BlogRow): Promise<BlogRow> {
+export async function publishNow(post: BlogListItem): Promise<BlogRow> {
   const now = new Date().toISOString();
   const live = hasBeenLive(post);
 
@@ -247,9 +202,8 @@ export async function publishNow(post: BlogRow): Promise<BlogRow> {
   );
 }
 
-/** Schedule for a future instant. Refuses the past — that is a publish, not a schedule. */
 export async function schedulePost(
-  post: BlogRow,
+  post: BlogListItem,
   publishAt: Date,
   timeZone: string,
 ): Promise<BlogRow> {
@@ -263,23 +217,25 @@ export async function schedulePost(
   );
 }
 
-export async function archivePost(post: BlogRow): Promise<BlogRow> {
+export async function archivePost(post: BlogListItem): Promise<BlogRow> {
   return updateBlog(post.id, { status: "archived" }, "Archived");
 }
 
-/**
- * Bring an archived post back.
- *
- * It returns as a DRAFT, not straight to live. Un-archiving is an editorial intention
- * to look at something again; making it public again should be a separate, deliberate
- * click.
- */
-export async function unarchivePost(post: BlogRow): Promise<BlogRow> {
+export async function unarchivePost(post: BlogListItem): Promise<BlogRow> {
   return updateBlog(post.id, { status: "draft" }, "Unarchived");
 }
 
-export async function restoreVersion(blogId: string, version: BlogVersionRow): Promise<BlogRow> {
-  const s = version.snapshot;
+export async function restoreVersion(blogId: string, versionId: string): Promise<BlogRow> {
+  const { data, error } = await db()
+    .from("blog_versions")
+    .select("version,snapshot")
+    .eq("id", versionId)
+    .maybeSingle();
+  fail(error, "Could not load that version");
+  if (!data) throw new Error("That version no longer exists.");
+
+  const row = data as { version: number; snapshot: Partial<BlogRow> };
+  const s = row.snapshot;
   return updateBlog(
     blogId,
     {
@@ -300,14 +256,10 @@ export async function restoreVersion(blogId: string, version: BlogVersionRow): P
       related_blogs: s.related_blogs,
       faq: s.faq,
       read_time: s.read_time,
-      // Status and schedule are NOT restored. Reverting the copy of a live post must
-      // not silently unpublish it.
     },
-    `Restored from version ${version.version}`,
+    `Restored from version ${row.version}`,
   );
 }
-
-/* ── categories ─────────────────────────────────────────────────────────────── */
 
 export async function upsertCategory(input: {
   id?: string;
@@ -329,15 +281,10 @@ export async function deleteCategory(id: string): Promise<void> {
   fail(error, "Could not delete category");
 }
 
-/* ── media ──────────────────────────────────────────────────────────────────── */
-
 const BUCKET = "blog-images";
 
-/** Upload to storage and record the file, returning the public URL to reference. */
 export async function uploadMedia(file: File, alt = ""): Promise<MediaRow> {
   const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-").replace(/^-+|-+$/g, "");
-  // Date-partitioned and randomised: two uploads of "scan.jpg" must not collide, and a
-  // flat bucket with thousands of objects is unpleasant to browse.
   const now = new Date();
   const path = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${Date.now()}-${safeName}`;
 
@@ -372,15 +319,6 @@ export async function deleteMedia(item: MediaRow): Promise<void> {
   fail(error, "Could not delete media");
 }
 
-/* ── revalidation ───────────────────────────────────────────────────────────── */
-
-/**
- * Ask the site to rebuild the pages this post appears on.
- *
- * Best-effort on purpose: the write already succeeded, and ISR would pick the change up
- * within the minute anyway. A failure here is worth a console warning, never an error
- * dialog telling the author their save did not work.
- */
 export async function revalidate(slugs: string[]): Promise<void> {
   try {
     const { data } = await db().auth.getSession();

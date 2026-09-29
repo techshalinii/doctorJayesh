@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Sparkles, X } from "lucide-react";
 import {
   BAND_LABEL,
@@ -18,19 +18,6 @@ import {
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { AdminButton, Banner, Modal } from "@/components/admin/ui";
 import { cn } from "@/lib/utils";
-
-/**
- * Live SEO score for the SEO title and meta description, with a Suggest panel.
- *
- * The score is computed locally on every keystroke by lib/cms/seo-score.ts — it is pure
- * and rule-based, so there is no request to wait for and no chance of the number
- * disagreeing with the checklist under it.
- *
- * Suggest is where a model may be involved, and only for wording. Options come back
- * already scored by the same rules, and the panel shows each one's length and per-rule
- * ticks, so the author is never asked to trust a suggestion on the basis that it was
- * generated.
- */
 
 const BAND_STYLES: Record<ScoreBand, { ring: string; text: string; bar: string }> = {
   good: { ring: "ring-emerald-200 bg-emerald-50", text: "text-emerald-700", bar: "bg-emerald-500" },
@@ -51,7 +38,10 @@ export function SeoScore({
 }) {
   const [open, setOpen] = useState(false);
 
-  const score = kind === "title" ? scoreSeoTitle(value, context) : scoreMetaDescription(value, context);
+  const score = useMemo(
+    () => (kind === "title" ? scoreSeoTitle(value, context) : scoreMetaDescription(value, context)),
+    [kind, value, context],
+  );
   const style = BAND_STYLES[score.band];
   const inRange = score.length >= score.ideal.min && score.length <= score.ideal.max;
 
@@ -79,8 +69,6 @@ export function SeoScore({
         )}
       </div>
 
-      {/* One segment per rule, width proportional to what it is worth. Reading the bar
-          tells you WHICH points are missing, not just how many. */}
       <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
         {score.rules.map((rule) => (
           <div
@@ -144,8 +132,6 @@ function RuleList({ score }: { score: ScoreResult }) {
   );
 }
 
-/* ── the Suggest panel ──────────────────────────────────────────────────────── */
-
 function SuggestModal({
   kind,
   score,
@@ -161,8 +147,6 @@ function SuggestModal({
 }) {
   const hasKeyword = Boolean(context.focusKeyword.trim());
 
-  // Templates are computed synchronously so the panel has content the moment it opens;
-  // the model call, if there is one, replaces them when it lands.
   const [options, setOptions] = useState<SuggestOption[]>(() =>
     hasKeyword ? (kind === "title" ? suggestSeoTitles(context) : suggestMetaDescriptions(context)) : [],
   );
@@ -221,7 +205,6 @@ function SuggestModal({
           </Banner>
         )}
 
-        {/* 1. what is wrong, 2. the rule and why it exists */}
         <section>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-navy-700">
             What&rsquo;s failing
@@ -246,7 +229,6 @@ function SuggestModal({
           )}
         </section>
 
-        {/* 3. concrete rewrites, each shown with the evidence for its own claim */}
         {hasKeyword && (
           <section>
             <div className="flex flex-wrap items-center justify-between gap-2">

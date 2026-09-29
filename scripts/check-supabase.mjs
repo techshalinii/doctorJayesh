@@ -1,14 +1,3 @@
-/**
- * Verifies a Supabase project against what the CMS expects.
- *
- * Connects with the PUBLISHABLE key only — the same credential the website and the
- * browser hold — so everything it reports is what an anonymous visitor can actually
- * see. That is the point: a check run with an elevated key would pass on a project
- * whose security rules are wrong.
- *
- *   node --env-file=.env.local scripts/check-supabase.mjs
- */
-
 import { createClient } from "@supabase/supabase-js";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -30,13 +19,9 @@ const fail = (msg) => {
 
 console.log(`\nChecking ${URL}\n`);
 
-/* ── tables ─────────────────────────────────────────────────────────────────── */
-
 console.log("Tables");
 for (const table of ["blogs", "blog_versions", "categories", "media"]) {
   const { error } = await db.from(table).select("*", { count: "exact", head: true });
-  // A missing table reports PGRST205 / 42P01. An RLS refusal is NOT an error — it
-  // returns an empty result — so reaching this point at all means the table exists.
   if (error && /does not exist|schema cache/i.test(error.message)) {
     fail(`${table} — not found. Did the migration run?`);
   } else if (error) {
@@ -46,7 +31,36 @@ for (const table of ["blogs", "blog_versions", "categories", "media"]) {
   }
 }
 
-/* ── seeded data ────────────────────────────────────────────────────────────── */
+console.log("\nAI generator (0003_ai_generator.sql)");
+{
+  let missing = 0;
+  for (const table of [
+    "content_profiles",
+    "topic_candidates",
+    "ai_jobs",
+    "blog_ai_metadata",
+    "ai_settings",
+  ]) {
+    const { error } = await db.from(table).select("*", { count: "exact", head: true });
+    if (error && /does not exist|schema cache/i.test(error.message)) {
+      missing++;
+      fail(`${table} — not found. Run 0003_ai_generator.sql.`);
+    } else {
+      pass(`${table}`);
+    }
+  }
+
+  if (!missing) {
+    const { data, error } = await db.from("ai_jobs").select("id").limit(1);
+    if (error) {
+      pass(`ai_jobs is not readable anonymously (${error.code ?? "blocked"})`);
+    } else if (data.length) {
+      fail("ANONYMOUS READ of ai_jobs RETURNED ROWS — the admin-only policy is missing");
+    } else {
+      pass("ai_jobs returns nothing to an anonymous reader");
+    }
+  }
+}
 
 console.log("\nSeed data");
 {
@@ -75,8 +89,6 @@ console.log("\nSeed data");
   }
 }
 
-/* ── storage ────────────────────────────────────────────────────────────────── */
-
 console.log("\nStorage");
 {
   const { error } = await db.storage.from("blog-images").list("", { limit: 1 });
@@ -84,12 +96,8 @@ console.log("\nStorage");
   else pass("blog-images bucket is readable");
 }
 
-/* ── security ───────────────────────────────────────────────────────────────── */
-
 console.log("\nSecurity (as an anonymous visitor)");
 {
-  // Writing must be refused. If this SUCCEEDS the row is real and public — the worst
-  // possible outcome — so it is cleaned up immediately and reported loudly.
   const slug = `zz-rls-probe-${Date.now()}`;
   const { error } = await db.from("blogs").insert({ slug, title: "RLS probe" });
   if (error) {
@@ -100,7 +108,6 @@ console.log("\nSecurity (as an anonymous visitor)");
   }
 }
 {
-  // Reading must return only visible rows. Anything else means a draft could leak.
   const { data, error } = await db.from("blogs").select("slug,status,publish_at");
   if (error) {
     fail(`reads — ${error.message}`);
@@ -124,8 +131,6 @@ console.log("\nSecurity (as an anonymous visitor)");
   if (error) pass("blog_versions writes are refused");
   else fail("ANONYMOUS WRITE to blog_versions SUCCEEDED");
 }
-
-/* ── auth ───────────────────────────────────────────────────────────────────── */
 
 console.log("\nAuth");
 {

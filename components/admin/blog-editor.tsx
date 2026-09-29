@@ -27,13 +27,15 @@ import {
   updateBlog,
   type BlogInput,
 } from "@/lib/admin/api";
-import { readTimeFromBlocks } from "@/lib/cms/blocks";
+import { blocksToPlainText, readTimeFromBlocks } from "@/lib/cms/blocks";
+import { AiPanel } from "@/components/admin/ai/ai-panel";
 import { isVisible } from "@/lib/cms/visibility";
 import { toSlug } from "@/lib/cms/markdown-import";
 import { DEFAULT_TIME_ZONE, TIME_ZONES, utcToWallTime, wallTimeToUtc } from "@/lib/admin/timezone";
 import type { ImportedPost } from "@/lib/cms/markdown-import";
 import type { Block, BlogRow, BlogStatus, CategoryRow, FaqItem } from "@/lib/cms/types";
 import type { ScoreContext } from "@/lib/cms/seo-score";
+import type { BlogListItem } from "@/lib/admin/api";
 import { siteUrl } from "@/lib/data";
 import {
   AdminButton,
@@ -54,14 +56,6 @@ import { MarkdownImport } from "@/components/admin/markdown-import";
 import { FeaturedImagePicker } from "@/components/admin/media-picker";
 import { PreviewModal } from "@/components/admin/preview-modal";
 import { VersionHistory } from "@/components/admin/version-history";
-
-/**
- * The post editor.
- *
- * One `form` object holds every field; everything else derives from it. That keeps the
- * autosave, the dirty check and the SEO scoring reading from the same state rather than
- * from a dozen independent pieces that can disagree.
- */
 
 interface FormState {
   title: string;
@@ -132,14 +126,10 @@ export function BlogEditor({
   defaultAuthor,
   openImport = false,
 }: {
-  /** null for a new post. */
   post: BlogRow | null;
-  /** The 180 markdown articles, so the related picker can reach them. */
   migrated: RelatedCandidate[];
-  /** Root slugs the site already serves from elsewhere — see getReservedSlugs(). */
   reservedSlugs: string[];
   defaultAuthor: string;
-  /** Open the Markdown importer on mount — the list links here with `?import=1`. */
   openImport?: boolean;
 }) {
   const router = useRouter();
@@ -147,7 +137,7 @@ export function BlogEditor({
   const [post, setPost] = useState<BlogRow | null>(initialPost);
   const [form, setForm] = useState<FormState>(() => toForm(initialPost, defaultAuthor));
   const [categories, setCategories] = useState<CategoryRow[]>([]);
-  const [allPosts, setAllPosts] = useState<BlogRow[]>([]);
+  const [allPosts, setAllPosts] = useState<BlogListItem[]>([]);
 
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -159,14 +149,7 @@ export function BlogEditor({
   const [showVersions, setShowVersions] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
 
-  /** Bumped when the body is replaced wholesale, to reset the uncontrolled editor. */
   const [bodyKey, setBodyKey] = useState(0);
-  /**
-   * Once the author edits the slug by hand, stop deriving it from the title.
-   *
-   * State rather than a ref because it drives what renders — whether the field is
-   * disabled and whether the Unlock button is shown.
-   */
   const [slugTouched, setSlugTouched] = useState(Boolean(initialPost));
 
   const live = post ? isVisible(post) : false;
@@ -187,8 +170,6 @@ export function BlogEditor({
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Could not load reference data."));
   }, []);
 
-  /* ── derived ─────────────────────────────────────────────────────────────── */
-
   const others = useMemo(() => allPosts.filter((p) => p.id !== post?.id), [allPosts, post?.id]);
 
   const scoreContext: ScoreContext = useMemo(
@@ -204,11 +185,6 @@ export function BlogEditor({
 
   const candidates = useMemo(() => toCandidates(allPosts, migrated), [allPosts, migrated]);
 
-  /**
-   * A duplicate title or slug is a warning, not a block: the slug is unique-constrained
-   * in the database and will fail loudly on save, and a duplicate title is sometimes
-   * legitimate. The author should see it before they hit that wall, though.
-   */
   const reserved = useMemo(() => new Set(reservedSlugs), [reservedSlugs]);
 
   const duplicates = useMemo(() => {
@@ -216,10 +192,6 @@ export function BlogEditor({
     const title = form.title.trim().toLowerCase();
     const messages: string[] = [];
 
-    // Checked against EVERY root slug the site already answers — migrated posts, the
-    // migrated pages (brain-tumor, fellowship, surgeries, thank-you…) and the hand-built
-    // routes. All of those win over the [slug] segment, so a post here would be listed
-    // and submitted to Google while its URL served something else entirely.
     if (slug && reserved.has(slug)) {
       messages.push(
         `/${slug}/ is already served by the existing site, so this post could never appear at it. Choose another slug.`,
@@ -234,8 +206,6 @@ export function BlogEditor({
   }, [form.slug, form.title, others, reserved]);
 
   const readTime = readTimeFromBlocks(form.content);
-
-  /* ── saving ──────────────────────────────────────────────────────────────── */
 
   const save = useCallback(
     async (note = "", silent = false): Promise<BlogRow | null> => {
@@ -256,8 +226,6 @@ export function BlogEditor({
         setDirty(false);
         if (!silent) setNotice("Saved.");
 
-        // A brand-new post gets a real URL, so later autosaves update rather than
-        // creating a second row.
         if (!post) router.replace(`/admin/blogs/${saved.id}/`);
         else void revalidate([saved.slug]);
 
@@ -272,19 +240,6 @@ export function BlogEditor({
     [form, post, router],
   );
 
-  /**
-   * Autosave, every 30 seconds while there are unsaved changes.
-   *
-   * Only for posts that already exist. On a new post it would create a row the moment
-   * someone typed a character and wandered off, and the Posts list would fill with
-   * empty drafts — the first save stays a deliberate act.
-   *
-   * A repeating interval, NOT a timer restarted on each edit. Keying it off the form
-   * would reset the countdown on every keystroke, so someone writing steadily for ten
-   * minutes — exactly the person autosave exists for — would never be saved at all.
-   * `dirty` and `save` are read through refs so the interval is never torn down and
-   * rebuilt mid-cycle.
-   */
   const saveRef = useRef(save);
   const dirtyRef = useRef(dirty);
   useEffect(() => {
@@ -304,7 +259,6 @@ export function BlogEditor({
     return () => clearInterval(interval);
   }, [postId]);
 
-  /** Browsers ignore the message, but the prompt itself still appears. */
   useEffect(() => {
     if (!dirty) return;
     const warn = (e: BeforeUnloadEvent) => {
@@ -315,14 +269,10 @@ export function BlogEditor({
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
 
-  /* ── workflow actions ────────────────────────────────────────────────────── */
-
   const runAction = async (key: string, action: (saved: BlogRow) => Promise<BlogRow>) => {
     setBusy(key);
     setError(null);
     try {
-      // Always flush pending edits first: publishing a post whose latest paragraph is
-      // still only in the browser is the worst possible surprise.
       const saved = (await save("", true)) ?? post;
       if (!saved) throw new Error("Save the post first.");
 
@@ -364,7 +314,6 @@ export function BlogEditor({
     setForm((f) => ({
       ...f,
       title: imported.title || f.title,
-      // A live post's URL is not changed by an import.
       slug: everLive ? f.slug : imported.slug || f.slug,
       excerpt: imported.excerpt || f.excerpt,
       content: imported.content,
@@ -373,8 +322,6 @@ export function BlogEditor({
       category: imported.category || f.category,
       tags: imported.tags.length ? imported.tags.join(", ") : f.tags,
       author: imported.author || f.author,
-      // Taken verbatim from the draft's own SEO-title line, or left as it was. Never
-      // derived from the H1 — see lib/cms/markdown-import.ts.
       seo_title: imported.seo_title || f.seo_title,
       meta_description: imported.meta_description || f.meta_description,
       focus_keyword: imported.focus_keyword || f.focus_keyword,
@@ -391,8 +338,6 @@ export function BlogEditor({
         : "Imported.",
     );
   };
-
-  /* ── render ──────────────────────────────────────────────────────────────── */
 
   return (
     <div className="mx-auto w-full max-w-7xl pb-24">
@@ -433,9 +378,6 @@ export function BlogEditor({
           <AdminButton
             variant="primary"
             disabled={busy !== null}
-            // No confirmation dialog: publishing is the ordinary action, it is
-            // reversible by archiving, and a modal between the author and it just
-            // trains them to click through.
             onClick={() => runAction("publish", (saved) => publishNow(saved))}
           >
             <Send className="h-4 w-4" /> {busy === "publish" ? "Publishing…" : "Publish now"}
@@ -454,7 +396,6 @@ export function BlogEditor({
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        {/* ── main column ── */}
         <div className="flex min-w-0 flex-col gap-6">
           <Panel>
             <div className="flex flex-col gap-4">
@@ -538,7 +479,6 @@ export function BlogEditor({
           </Panel>
         </div>
 
-        {/* ── sidebar ── */}
         <div className="flex flex-col gap-6">
           <Panel title="Search appearance">
             <div className="flex flex-col gap-5">
@@ -683,10 +623,11 @@ export function BlogEditor({
               </div>
             </Panel>
           )}
+
+          {post && <AiPanel blogId={post.id} body={blocksToPlainText(form.content)} />}
         </div>
       </div>
 
-      {/* ── modals ── */}
       <MarkdownImport open={showImport} onClose={() => setShowImport(false)} onImport={applyImport} />
 
       {showPreview && (
@@ -733,8 +674,6 @@ export function BlogEditor({
   );
 }
 
-/* ── schedule dialog ────────────────────────────────────────────────────────── */
-
 function ScheduleDialog({
   publishAt,
   timeZone,
@@ -752,8 +691,6 @@ function ScheduleDialog({
   const [time, setTime] = useState(initial.time);
   const [error, setError] = useState<string | null>(null);
 
-  // This dialog is hand-built rather than a <Modal>, so it opts into the same
-  // close-on-Escape behaviour explicitly.
   useEscapeKey(onClose);
 
   const confirm = () => {

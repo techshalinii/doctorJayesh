@@ -10,17 +10,7 @@ import { blocksToTiptap, tiptapToBlocks } from "@/lib/cms/tiptap";
 import { wallTimeToUtc, utcToWallTime } from "@/lib/admin/timezone";
 import type { Block } from "@/lib/cms/types";
 
-/**
- * Acceptance tests for everything that can be checked without a database.
- *
- * Run with `npm test`. The DB-backed half of the acceptance list — a draft being
- * absent from the live site, Publish Now appearing within the cache window — lives in
- * tests/http.test.ts, which needs a configured Supabase project and a running server.
- */
-
 const iso = (offsetMs: number) => new Date(Date.now() + offsetMs).toISOString();
-
-/* ── 1 & 2: the visibility rule ─────────────────────────────────────────────── */
 
 describe("visibility rule", () => {
   it("only published and scheduled can ever be visible", () => {
@@ -38,7 +28,6 @@ describe("visibility rule", () => {
     const post = { status: "scheduled", publish_at: "2026-09-18T10:00:00.000Z" };
 
     assert.equal(isVisible(post, new Date("2026-09-18T09:59:59.000Z")), false);
-    // Same row, no status change, no cron — only the clock moved.
     assert.equal(isVisible(post, new Date("2026-09-18T10:00:00.000Z")), true);
     assert.equal(isVisible(post, new Date("2026-09-19T00:00:00.000Z")), true);
   });
@@ -52,8 +41,6 @@ describe("visibility rule", () => {
     assert.equal(isVisible({ status: "published", publish_at: "not a date" }), false);
   });
 });
-
-/* ── 8: SEO scoring ─────────────────────────────────────────────────────────── */
 
 const ctx: ScoreContext = {
   pageTitle: "Bulging Disc vs Herniated Disc",
@@ -129,19 +116,6 @@ describe("SEO title scoring", () => {
 });
 
 describe("meta description scoring", () => {
-  /**
-   * Acceptance 8, reconciled with the rubric in §8b.
-   *
-   * The brief asks for a 212-character description to land in the RED band. Under the
-   * point table it specifies, that is arithmetically impossible for a description whose
-   * only fault is length: over-length forfeits the 30 length points and nothing else,
-   * so an otherwise-good one scores 70 — amber. Red (<50) needs a second failure.
-   *
-   * The rubric is the feature and is implemented exactly as written; these two tests
-   * assert what it actually produces. The substance of the acceptance check is intact:
-   * an over-length description scores 0 on length, is flagged, and is below the "Good"
-   * threshold that shows the Suggest button.
-   */
   it("scores a 212-character description 0 on length and below Good (acceptance 8)", () => {
     const tooLong =
       "Learn about the difference between a bulging disc and a herniated disc, what causes each " +
@@ -218,8 +192,6 @@ describe("meta description scoring", () => {
   });
 });
 
-/* ── 8: Suggest returns options that satisfy the rules ──────────────────────── */
-
 describe("deterministic suggestions", () => {
   it("returns 3 title options, all 50-60 chars with the keyword up front (acceptance 8)", () => {
     const options = suggestSeoTitles(ctx);
@@ -268,8 +240,6 @@ describe("deterministic suggestions", () => {
     }
   });
 });
-
-/* ── Markdown import ────────────────────────────────────────────────────────── */
 
 const DRAFT = `<!--
 SEO title: Bulging Disc: Causes, Symptoms and Treatment Options
@@ -351,7 +321,6 @@ describe("markdown import", () => {
     assert.equal(imported.faq.length, 2);
     assert.equal(imported.faq[0].question, "Is a bulging disc serious?");
     assert.match(imported.faq[0].answer, /conservative treatment/);
-    // Bold question whose answer is on the NEXT line.
     assert.equal(imported.faq[1].question, "Do I need surgery?");
     assert.match(imported.faq[1].answer, /nerve compression/);
   });
@@ -377,8 +346,6 @@ describe("markdown import", () => {
   });
 });
 
-/* ── rendering safety ───────────────────────────────────────────────────────── */
-
 describe("block rendering", () => {
   it("escapes HTML in stored text (acceptance: stored content cannot inject markup)", () => {
     const blocks: Block[] = [
@@ -386,8 +353,6 @@ describe("block rendering", () => {
       { type: "heading", level: 2, text: "<img onerror=alert(1)>" },
     ];
     const html = renderBlocks(blocks);
-    // The words survive as text — that is fine and correct. What must not survive is a
-    // real tag: no `<script`, and no `<img` carrying the handler as an attribute.
     assert.equal(/<script/i.test(html), false);
     assert.equal(/<img[^>]*onerror/i.test(html), false);
     assert.ok(html.includes("&lt;script&gt;"));
@@ -438,8 +403,6 @@ describe("editor round trip", () => {
   });
 
   it("keeps a literal asterisk literal", () => {
-    // The canonical stored form escapes a literal delimiter, so the round trip is
-    // stable and the renderer knows it is not emphasis.
     const blocks: Block[] = [{ type: "paragraph", text: "2 \\* 3 = 6" }];
     assert.deepEqual(tiptapToBlocks(blocksToTiptap(blocks)), blocks);
     assert.equal(renderBlocks(blocks), "<p>2 * 3 = 6</p>");
@@ -450,11 +413,8 @@ describe("editor round trip", () => {
   });
 });
 
-/* ── scheduling maths ───────────────────────────────────────────────────────── */
-
 describe("timezone conversion", () => {
   it("converts an IST wall time to the right UTC instant", () => {
-    // Asia/Kolkata is UTC+5:30 year round.
     const utc = wallTimeToUtc("2026-10-03", "14:30", "Asia/Kolkata");
     assert.equal(utc?.toISOString(), "2026-10-03T09:00:00.000Z");
   });
@@ -468,7 +428,6 @@ describe("timezone conversion", () => {
   });
 
   it("handles a zone that observes DST on both sides of the transition", () => {
-    // New York: EDT (UTC-4) in July, EST (UTC-5) in January.
     assert.equal(
       wallTimeToUtc("2026-07-01", "12:00", "America/New_York")?.toISOString(),
       "2026-07-01T16:00:00.000Z",
@@ -485,12 +444,8 @@ describe("timezone conversion", () => {
   });
 });
 
-/* ── regressions found during review ────────────────────────────────────────── */
-
 describe("regressions", () => {
   it("does not call a medical acronym shouting", () => {
-    // ACDF, TLIF and ALIF are real spine procedures this site writes about; MRI and CT
-    // appear constantly. None of them is shouting.
     for (const title of [
       "ACDF Surgery: Recovery, Risks and Treatment Options",
       "MRI and CT for Bulging Disc: What Each Scan Shows",

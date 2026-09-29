@@ -28,18 +28,12 @@ import {
 } from "@/lib/admin/api";
 import { isVisible } from "@/lib/cms/visibility";
 import { formatDateTimeParts } from "@/lib/admin/timezone";
-import type { BlogRow, BlogStatus, CategoryRow } from "@/lib/cms/types";
+import type { BlogStatus, CategoryRow } from "@/lib/cms/types";
+import type { BlogListItem } from "@/lib/admin/api";
 import { AdminButton, Banner, Input, Select, StatusBadge } from "@/components/admin/ui";
+import { ReviewBadge, SourceBadge } from "@/components/admin/ai/ai-ui";
+import { listAiMetadata, type BlogAiMetadata } from "@/lib/admin/ai-api";
 import { cn } from "@/lib/utils";
-
-/**
- * The post list.
- *
- * Sorted by publish date descending by default, never by `updated_at` — see the note on
- * `listBlogs()`. Columns drop out progressively as the viewport narrows rather than
- * wrapping, and whatever is left still scrolls sideways if it has to, so a header or a
- * date never breaks across two lines.
- */
 
 type SortKey = "publish_at" | "title" | "updated_at" | "status" | "read_time";
 
@@ -53,27 +47,28 @@ const TABS: { key: "all" | BlogStatus; label: string }[] = [
 
 export default function BlogListPage() {
   const router = useRouter();
-  const [posts, setPosts] = useState<BlogRow[]>([]);
+  const [posts, setPosts] = useState<BlogListItem[]>([]);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [aiMeta, setAiMeta] = useState<Record<string, BlogAiMetadata>>({});
 
   const [tab, setTab] = useState<"all" | BlogStatus>("all");
   const [category, setCategory] = useState("all");
   const [query, setQuery] = useState("");
+  const [source, setSource] = useState<"all" | "ai" | "manual">("all");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
     key: "publish_at",
     dir: "desc",
   });
 
-  const apply = useCallback(([blogs, cats]: [BlogRow[], CategoryRow[]]) => {
+  const apply = useCallback(([blogs, cats]: [BlogListItem[], CategoryRow[]]) => {
     setPosts(blogs);
     setCategories(cats);
     setError(null);
   }, []);
 
-  /** Refetch after a row action. The table keeps its current rows meanwhile. */
   const load = useCallback(
     () =>
       Promise.all([listBlogs(), listCategories()])
@@ -83,9 +78,10 @@ export default function BlogListPage() {
   );
 
   useEffect(() => {
-    // `alive` stops a slow response from setting state on an unmounted page, and the
-    // promise form keeps every update off the effect's synchronous path.
     let alive = true;
+    listAiMetadata().then((meta) => {
+      if (alive) setAiMeta(meta);
+    });
     Promise.all([listBlogs(), listCategories()])
       .then((data) => {
         if (alive) apply(data);
@@ -112,6 +108,8 @@ export default function BlogListPage() {
     const filtered = posts.filter((p) => {
       if (tab !== "all" && p.status !== tab) return false;
       if (category !== "all" && p.category !== category) return false;
+      if (source === "ai" && aiMeta[p.id]?.source !== "ai") return false;
+      if (source === "manual" && aiMeta[p.id]?.source === "ai") return false;
       if (q && !`${p.title} ${p.slug} ${p.focus_keyword}`.toLowerCase().includes(q)) return false;
       return true;
     });
@@ -129,8 +127,6 @@ export default function BlogListPage() {
           return (Date.parse(a.updated_at || "0") - Date.parse(b.updated_at || "0")) * dir;
         case "publish_at":
         default: {
-          // Unscheduled drafts have no date; they sort to the end either way rather
-          // than being treated as 1970.
           const av = a.publish_at ? Date.parse(a.publish_at) : null;
           const bv = b.publish_at ? Date.parse(b.publish_at) : null;
           if (av === null && bv === null) return 0;
@@ -140,7 +136,7 @@ export default function BlogListPage() {
         }
       }
     });
-  }, [posts, tab, category, query, sort]);
+  }, [posts, tab, category, query, sort, source, aiMeta]);
 
   const toggleSort = (key: SortKey) =>
     setSort((s) => ({ key, dir: s.key === key && s.dir === "desc" ? "asc" : "desc" }));
@@ -159,14 +155,12 @@ export default function BlogListPage() {
     }
   };
 
-  const onDelete = async (post: BlogRow) => {
+  const onDelete = async (post: BlogListItem) => {
     const live = isVisible(post);
     const message = live
       ? `“${post.title}” is LIVE at /${post.slug}/. Deleting it will make that URL 404 for anyone who has linked to or bookmarked it.\n\nType the slug to confirm.`
       : `Delete “${post.title}”? This cannot be undone.`;
 
-    // A live post takes a typed confirmation, not a click. The cost of an accidental
-    // delete is an indexed URL going to 404, which is not recoverable by undo.
     if (live) {
       const typed = window.prompt(message);
       if (typed !== post.slug) return;
@@ -202,7 +196,6 @@ export default function BlogListPage() {
         </div>
       )}
 
-      {/* filters */}
       <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
         <div className="flex flex-wrap items-center gap-1">
           {TABS.map((t) => (
@@ -236,6 +229,17 @@ export default function BlogListPage() {
           ))}
         </Select>
 
+        <Select
+          value={source}
+          onChange={(e) => setSource(e.target.value as "all" | "ai" | "manual")}
+          className="!w-auto min-w-36"
+          aria-label="Filter by source"
+        >
+          <option value="all">All sources</option>
+          <option value="ai">AI generated</option>
+          <option value="manual">Written by hand</option>
+        </Select>
+
         <div className="relative ml-auto w-full sm:w-64">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <Input
@@ -248,7 +252,6 @@ export default function BlogListPage() {
         </div>
       </div>
 
-      {/* table */}
       <div className="mt-4 overflow-x-auto rounded-lg border border-border bg-white">
         <table className="w-full min-w-[46rem] text-sm">
           <thead>
@@ -257,6 +260,7 @@ export default function BlogListPage() {
                 Title
               </Th>
               <Th className="hidden lg:table-cell">Category</Th>
+              <Th className="hidden lg:table-cell">Source</Th>
               <Th onClick={() => toggleSort("status")} sort={sort} k="status">
                 Status
               </Th>
@@ -286,7 +290,7 @@ export default function BlogListPage() {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={8} className="px-3 py-12 text-center text-muted">
+                <td colSpan={9} className="px-3 py-12 text-center text-muted">
                   Loading…
                 </td>
               </tr>
@@ -294,7 +298,7 @@ export default function BlogListPage() {
 
             {!loading && rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-3 py-12 text-center text-muted">
+                <td colSpan={9} className="px-3 py-12 text-center text-muted">
                   {posts.length === 0
                     ? "No posts yet. Create one, or import a Markdown draft."
                     : "No posts match these filters."}
@@ -322,6 +326,17 @@ export default function BlogListPage() {
 
                   <td className="hidden whitespace-nowrap px-3 py-3 text-muted lg:table-cell">
                     {post.category || "—"}
+                  </td>
+
+                  <td className="hidden whitespace-nowrap px-3 py-3 lg:table-cell">
+                    {aiMeta[post.id] ? (
+                      <div className="flex flex-col items-start gap-1">
+                        <SourceBadge source={aiMeta[post.id].source} />
+                        <ReviewBadge state={aiMeta[post.id].medical_review} />
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted">—</span>
+                    )}
                   </td>
 
                   <td className="whitespace-nowrap px-3 py-3">
@@ -371,8 +386,6 @@ export default function BlogListPage() {
                           variant="ghost"
                           className="!px-2 !py-1 text-xs"
                           disabled={busy}
-                          // No confirmation dialog, by design — publishing is the
-                          // ordinary action here and is fully reversible by archiving.
                           onClick={() => act(post.id, () => publishNow(post), [post.slug])}
                         >
                           Publish

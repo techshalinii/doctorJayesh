@@ -26,10 +26,6 @@ export default function ContactPage() {
 
   return (
     <>
-      {/* This route has no WordPress capture behind it, so there is no StoredJsonLd to
-          render and it was shipping with no structured data at all. The Physician entity
-          is the right one here: every property it claims — name, phone, email, the two
-          clinic addresses — is visibly rendered on this page. */}
       <JsonLd />
       <BreadcrumbJsonLd
         trail={[
@@ -46,7 +42,6 @@ export default function ContactPage() {
 
       <section className="py-14 lg:py-20">
         <Container className="grid gap-14 lg:grid-cols-12 lg:gap-16">
-          {/* left column */}
           <div className="lg:col-span-5">
             <div className="border-t border-navy-900/12 dark:border-white/12">
               {rows.map((r) => {
@@ -93,7 +88,6 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* form */}
           <Reveal className="lg:col-span-7">
             <div className="border border-navy-900/10 p-8 sm:p-10 dark:border-white/10">
               <h2 className="font-display text-2xl font-medium text-navy-900 dark:text-white">Send us a message</h2>

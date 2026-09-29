@@ -1,19 +1,5 @@
 import type { Block } from "@/lib/cms/types";
 
-/**
- * TipTap document ↔ stored blocks.
- *
- * The editor works in ProseMirror's node tree; the database stores the flat block union
- * from lib/cms/types.ts. Converting at the boundary — rather than storing ProseMirror
- * JSON directly — means the public renderer never has to understand an editor's
- * internal format, and swapping the editor later would not require a data migration.
- *
- * Inline marks round-trip through the token syntax the renderer already understands:
- * `**bold**`, `*italic*`, `` `code` `` and `[label](url)`.
- */
-
-/* ── ProseMirror shapes, narrowed to what this editor produces ──────────────── */
-
 interface PmMark {
   type: string;
   attrs?: Record<string, unknown>;
@@ -30,19 +16,10 @@ interface PmNode {
 const attrString = (node: PmNode, key: string): string =>
   typeof node.attrs?.[key] === "string" ? (node.attrs[key] as string) : "";
 
-/* ── TipTap → blocks ────────────────────────────────────────────────────────── */
-
-/**
- * Escape the characters the token syntax uses, so a literal asterisk typed by the
- * author survives the round trip instead of turning into emphasis on the way out.
- */
 function escapeTokens(text: string): string {
-  // The backslash itself is escaped too, or `C:\*` would round-trip into an escape it
-  // never was. The grammar in lib/cms/blocks.ts reads exactly this set back.
   return text.replace(/([\\*`[\]])/g, "\\$1");
 }
 
-/** Inline content → a token string. Marks are applied innermost-first. */
 function inlineToText(nodes: PmNode[] | undefined): string {
   if (!nodes) return "";
   return nodes
@@ -65,7 +42,6 @@ function inlineToText(nodes: PmNode[] | undefined): string {
     .join("");
 }
 
-/** Every paragraph inside a list item, flattened — nested lists are not supported. */
 function listItemToText(item: PmNode): string {
   return (item.content ?? [])
     .map((child) => inlineToText(child.content))
@@ -95,7 +71,6 @@ export function tiptapToBlocks(doc: PmNode | null | undefined): Block[] {
       }
       case "paragraph": {
         const text = inlineToText(node.content);
-        // An empty paragraph is ProseMirror's cursor spacing, not content.
         if (text.trim()) blocks.push({ type: "paragraph", text });
         break;
       }
@@ -137,7 +112,6 @@ export function tiptapToBlocks(doc: PmNode | null | undefined): Block[] {
       }
       case "table": {
         const rows = node.content ?? [];
-        // A first row of header cells becomes the <thead>; otherwise the table has none.
         const firstIsHeader = (rows[0]?.content ?? []).every((c) => c.type === "tableHeader");
         const header = firstIsHeader ? (rows[0].content ?? []).map(cellToText) : [];
         const body = (firstIsHeader ? rows.slice(1) : rows).map((row) =>
@@ -151,15 +125,11 @@ export function tiptapToBlocks(doc: PmNode | null | undefined): Block[] {
   return blocks;
 }
 
-/* ── blocks → TipTap ────────────────────────────────────────────────────────── */
-
-/** Must stay identical to `INLINE_TOKEN` in lib/cms/blocks.ts — same grammar, two readers. */
 const TOKEN =
   /(\\[\\*`[\]])|(\[(?:[^\]\\]|\\.)*\]\([^)\s]*\))|(\*\*(?:[^*\\]|\\.)+?\*\*)|(\*(?:[^*\\]|\\.)+?\*)|(`(?:[^`\\]|\\.)+?`)/g;
 
 const unescape = (text: string) => text.replace(/\\([\\*`[\]])/g, "$1");
 
-/** Token string → ProseMirror inline nodes. The inverse of `inlineToText`. */
 function textToInline(text: string): PmNode[] {
   const nodes: PmNode[] = [];
   let last = 0;
@@ -181,8 +151,6 @@ function textToInline(text: string): PmNode[] {
     } else if (link) {
       const parsed = /^\[((?:[^\]\\]|\\.)*)\]\(([^)\s]*)\)$/.exec(link);
       if (parsed) {
-        // A link label may itself carry emphasis, so it recurses and the href mark is
-        // added to whatever marks the label produced.
         for (const child of textToInline(parsed[1])) {
           child.marks = [...(child.marks ?? []), { type: "link", attrs: { href: parsed[2] } }];
           nodes.push(child);
@@ -254,6 +222,5 @@ export function blocksToTiptap(blocks: Block[]): PmNode {
     }
   });
 
-  // ProseMirror rejects an empty doc; give it somewhere to put the cursor.
   return { type: "doc", content: content.length ? content : [{ type: "paragraph" }] };
 }

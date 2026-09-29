@@ -5,17 +5,6 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { PostsExplorer } from "@/components/blog/posts-explorer";
 import { getMergedPostSummaries } from "@/lib/cms/public";
 
-/**
- * Kept, not cut, in the 2026-09-04 density pass. The section chrome is template-authored,
- * but the three cards it renders are migrated WordPress articles — this is the only place
- * on the homepage that links straight into indexed post URLs, which "Blog" in the nav does
- * not replace. Compressed instead: the category-filter and search row that PostsExplorer
- * draws for /blog/ is suppressed here, since the teaser always shows a fixed three.
- *
- * Reads the MERGED list, like /blog/ does. Reading only the markdown would leave the
- * homepage showing three older articles while the newest post sat above them on the
- * blog — the one page a first-time visitor sees, contradicting the one they click into.
- */
 export async function Resources() {
   const posts = await getMergedPostSummaries();
   return (

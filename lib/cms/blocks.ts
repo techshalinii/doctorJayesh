@@ -1,17 +1,5 @@
 import type { Block } from "@/lib/cms/types";
 
-/**
- * Server-side renderer for stored content blocks.
- *
- * Bodies are stored as structured data, never as HTML, so this module is the only
- * place that produces markup from them — and every value it interpolates is escaped
- * first. A stored document therefore cannot inject script, iframes or attributes
- * into the page, however it got into the database.
- *
- * The emitted classes are the ones `.article` already styles in app/globals.css, so
- * CMS posts render identically to the migrated markdown ones.
- */
-
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -21,11 +9,6 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/**
- * Only http(s), mailto, tel and site-relative targets survive. Anything else —
- * `javascript:`, `data:`, a protocol-relative `//evil.tld` — becomes "#", because a
- * link is the one place a stored string would otherwise reach a URL parser.
- */
 function safeUrl(raw: string): string {
   const url = raw.trim();
   if (/^\/(?!\/)/.test(url) || url.startsWith("#")) return url;
@@ -33,28 +16,11 @@ function safeUrl(raw: string): string {
   return "#";
 }
 
-/**
- * The inline token grammar, in precedence order.
- *
- * The first alternative is the ESCAPE, and it comes first on purpose: a backslashed
- * delimiter is consumed before any token can start on it, which is what stops
- * `2 \* 3 = 6` from being read as emphasis. lib/cms/tiptap.ts writes those escapes
- * when it converts the editor's document back to blocks, and uses the same grammar to
- * read them, so the two directions cannot drift.
- */
 const INLINE_TOKEN =
   /(\\[\\*`[\]])|(\[(?:[^\]\\]|\\.)*\]\([^)\s]*\))|(\*\*(?:[^*\\]|\\.)+?\*\*)|(\*(?:[^*\\]|\\.)+?\*)|(`(?:[^`\\]|\\.)+?`)/g;
 
 const unescapeTokens = (text: string) => text.replace(/\\([\\*`[\]])/g, "$1");
 
-/**
- * Inline token syntax: `**bold**`, `*italic*`, `` `code` `` and `[label](url)`, with
- * `\` escaping any of those delimiters.
- *
- * Every literal run is HTML-escaped before it is emitted, so the `<` a user typed stays
- * `&lt;` and only these four constructs ever become markup. Link labels recurse, so
- * `[**bold link**](…)` works; the URL does not, and is scheme-checked by `safeUrl`.
- */
 export function renderInline(text: string): string {
   let html = "";
   let last = 0;
@@ -83,7 +49,6 @@ export function renderInline(text: string): string {
     } else if (italic) {
       html += `<em>${renderInline(italic.slice(1, -1))}</em>`;
     } else if (code) {
-      // Never recursed: code spans are literal by definition.
       html += `<code>${escapeHtml(unescapeTokens(code.slice(1, -1)))}</code>`;
     }
   }
@@ -91,7 +56,6 @@ export function renderInline(text: string): string {
   return html + escapeHtml(unescapeTokens(text.slice(last)));
 }
 
-/** Compile a stored body to HTML. */
 export function renderBlocks(blocks: Block[]): string {
   return blocks.map(renderBlock).join("\n");
 }
@@ -124,7 +88,6 @@ function renderBlock(block: Block): string {
       const body = block.rows
         .map((r) => `<tr>${r.map((c) => `<td>${renderInline(c)}</td>`).join("")}</tr>`)
         .join("");
-      // Wrapped so a wide table scrolls instead of forcing the article to.
       return `<div class="table-scroll"><table>${head}<tbody>${body}</tbody></table></div>`;
     }
     case "image": {
@@ -138,7 +101,6 @@ function renderBlock(block: Block): string {
   }
 }
 
-/** Stable anchor id for a heading, so an in-page link survives edits to the copy. */
 export function slugifyHeading(text: string): string {
   return text
     .toLowerCase()
@@ -148,7 +110,6 @@ export function slugifyHeading(text: string): string {
     .slice(0, 60);
 }
 
-/** Every word in a body, tokens stripped — for read time and excerpt fallbacks. */
 export function blocksToPlainText(blocks: Block[]): string {
   const parts: string[] = [];
   for (const b of blocks) {
@@ -180,19 +141,11 @@ export function blocksToPlainText(blocks: Block[]): string {
     .trim();
 }
 
-/** Whole minutes at 200 wpm, matching lib/content.ts for the migrated posts. */
 export function readTimeFromBlocks(blocks: Block[]): number {
   const words = blocksToPlainText(blocks).split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
 }
 
-/**
- * Coerce whatever `content` jsonb holds into a valid `Block[]`.
- *
- * The column is untyped at the database level, so a hand-edited row could contain
- * anything. Unknown shapes are dropped rather than rendered, which keeps a bad row
- * from breaking the page.
- */
 export function parseBlocks(value: unknown): Block[] {
   if (!Array.isArray(value)) return [];
   const out: Block[] = [];

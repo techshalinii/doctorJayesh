@@ -1,31 +1,5 @@
-/**
- * Guards the migrated WordPress copy on `/` and `/about/`.
- *
- * Every string below is live SEO copy transcribed from the migration capture
- * (home-content.json / about-content.json, walked out of _elementor_data). The
- * brief for those two pages is that the layout is ours and the words are not, so
- * this asserts each one still reaches the rendered HTML — a redesign, a "tighten
- * this paragraph" edit or a density pass cannot drop indexed copy without failing
- * here. It also asserts the inverse: content the export marks visible:false, and
- * the theme's leftover demo text, must NOT render.
- *
- * Comparison is text-only — tags stripped, entities decoded, whitespace collapsed,
- * curly quotes and dashes folded to ASCII — so it tracks the words, not the markup.
- * Rewrap a paragraph or change a wrapper element and it still passes; reword it and
- * it fails.
- *
- *   npm run verify:copy                     # against a running `npm run dev`
- *   BASE_URL=https://preview.example.com npm run verify:copy
- *
- * Exits non-zero on any miss, so it can gate a deploy.
- */
-
 const BASE = (process.env.BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
-/**
- * Values the pages render from `lib/data.ts` rather than as literal text. Each must be
- * followed by punctuation or a space in the output, never straight into a word.
- */
 const INTERPOLATED = [
   "Dr. Jayesh Sardhara",
   "Dr. Sardhara",
@@ -43,8 +17,6 @@ const strip = (html) =>
 
 const norm = (s) =>
   s
-    // numeric entities first — React emits &#x27; for apostrophes, which the
-    // named-entity list below would otherwise miss.
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
     .replace(/&nbsp;/g, " ")
@@ -57,7 +29,6 @@ const norm = (s) =>
     .replace(/\s+/g, " ")
     .trim();
 
-// Authoritative copy, transcribed from the two content JSON files.
 const HOME = {
   path: "/",
   seoTitle: "Best Neuro Surgeon In Mulund, Mumbai | Dr. Jayesh Sardhara",
@@ -125,7 +96,6 @@ const HOME = {
     "S12 q7": "How has Dr. Sardhara's research impacted the field of neurosurgery?",
     "S12 a7": "Dr. Sardhara, a leading neurosurgeon doctor and brain tumour specialist, showcases an extensive research portfolio dedicated to enhancing neurosurgical practices. His innovative techniques and published works are pivotal, in shaping future advancements in neurosurgery. As a renowned researcher and specialist, Dr. Sardhara's contributions significantly benefit patients and professionals, reshaping the field's landscape.",
   },
-  // Raw-HTML checks (not text): things that must exist as markup/attributes.
   raw: {
     "hero CTA anchor #book_now": 'href="#book_now"',
     "book_now section id": 'id="book_now"',
@@ -210,7 +180,6 @@ async function audit(page) {
   const fails = [];
   const passes = [];
 
-  // metadata
   const titleTag = /<title>([\s\S]*?)<\/title>/.exec(html)?.[1] ?? "";
   (norm(titleTag) === norm(page.seoTitle) ? passes : fails).push(
     `TITLE  expected="${page.seoTitle}"  got="${norm(titleTag)}"`,
@@ -232,10 +201,6 @@ async function audit(page) {
     if (rawN.toLowerCase().includes(norm(s).toLowerCase())) leaks.push(`${label}  ::  "${s}"`);
   }
 
-  // Interpolation junctions. The checks above deliberately split each expected string
-  // AROUND a {value}, so a lost space between the value and the word after it passes them
-  // all — "124research publications" satisfies both halves. JSX drops that space easily
-  // (a `{expr} word` that wraps to the next line), so the junctions are asserted directly.
   const glued = [];
   for (const v of INTERPOLATED) {
     let i = -1;

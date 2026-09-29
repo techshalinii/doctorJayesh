@@ -27,18 +27,6 @@ import { uploadMedia } from "@/lib/admin/api";
 import type { Block } from "@/lib/cms/types";
 import { cn } from "@/lib/utils";
 
-/**
- * The article body editor.
- *
- * Owns a ProseMirror document internally and reports stored blocks outward, so nothing
- * above it deals with editor internals. It is deliberately UNCONTROLLED: pushing the
- * parent's value back in on every keystroke fights ProseMirror for cursor position. The
- * document is set once on mount and replaced only when `resetKey` changes — which the
- * Markdown importer and a version restore do, because those legitimately replace the
- * whole body.
- *
- * Images dropped or pasted in are uploaded to Supabase Storage and inserted by URL.
- */
 export function RichEditor({
   value,
   onChange,
@@ -46,20 +34,14 @@ export function RichEditor({
 }: {
   value: Block[];
   onChange: (blocks: Block[]) => void;
-  /** Change this to force the document to be replaced from `value`. */
   resetKey?: string | number;
 }) {
-  // The editor's `onUpdate` closure is created once, so it reads the latest handler
-  // through a ref rather than capturing the first one. Assigned in an effect, never
-  // during render — a ref written while rendering is not a re-render trigger and is
-  // unsafe under concurrent rendering.
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
 
   const editor = useEditor({
-    // Rendered on the client only; without this Next warns about an SSR/DOM mismatch.
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({ link: false }),
@@ -86,7 +68,6 @@ export function RichEditor({
     },
   });
 
-  /** Returns true when it consumed the event, so ProseMirror stops handling it. */
   function handleFiles(files: File[]): boolean {
     const images = files.filter((f) => f.type.startsWith("image/"));
     if (!images.length) return false;
@@ -107,11 +88,7 @@ export function RichEditor({
 
   useEffect(() => {
     if (!editor || resetKey === undefined) return;
-    // `false` — do not emit an update, or this would immediately call back with the
-    // same blocks the parent just handed in.
     editor.commands.setContent(blocksToTiptap(value) as never, { emitUpdate: false });
-    // `value` is intentionally not a dependency: reacting to it would make the editor
-    // controlled again. Only an explicit resetKey change replaces the document.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey, editor]);
 

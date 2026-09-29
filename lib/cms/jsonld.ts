@@ -1,16 +1,6 @@
 import type { BlogRow } from "@/lib/cms/types";
 import { doctor, siteUrl } from "@/lib/data";
 
-/**
- * Structured data for a CMS post.
- *
- * Generated, unlike the migrated posts — those replay a graph captured byte-for-byte
- * from WordPress (see components/seo/json-ld.tsx) and must not be regenerated. A CMS
- * post has no capture behind it, so it gets a fresh graph built to match what the
- * page actually renders: a BlogPosting, the breadcrumb trail the article shows, and
- * an FAQPage only when the post really has FAQ items on it.
- */
-
 export function cmsPostJsonLd(post: BlogRow, canonical: string): string {
   const image = post.og_image || post.featured_image;
   const published = post.publish_at ?? post.published_at ?? undefined;
@@ -62,8 +52,6 @@ export function cmsPostJsonLd(post: BlogRow, canonical: string): string {
     },
   ];
 
-  // Only when the questions are actually on the page. FAQPage markup describing
-  // content a visitor cannot see is precisely what earns a manual action.
   if (post.faq.length) {
     graph.push({
       "@type": "FAQPage",

@@ -4,26 +4,18 @@ import { useCallback, useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { deleteCategory, listBlogs, listCategories, upsertCategory } from "@/lib/admin/api";
 import { toSlug } from "@/lib/cms/markdown-import";
-import type { BlogRow, CategoryRow } from "@/lib/cms/types";
+import type { CategoryRow } from "@/lib/cms/types";
+import type { BlogListItem } from "@/lib/admin/api";
 import { AdminButton, Banner, Field, Input, Modal, Panel, Textarea } from "@/components/admin/ui";
 
-/**
- * Categories.
- *
- * Posts store the category NAME, not a foreign key — the migrated content has no
- * categories at all (everything was "uncategorized" in WordPress), so a join table
- * would add a constraint the older half of the blog cannot satisfy. The cost is that
- * renaming a category does not follow its posts, which is why the delete confirmation
- * says how many posts would be orphaned.
- */
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<CategoryRow[]>([]);
-  const [posts, setPosts] = useState<BlogRow[]>([]);
+  const [posts, setPosts] = useState<BlogListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Partial<CategoryRow> | null>(null);
 
-  const apply = useCallback(([cats, blogs]: [CategoryRow[], BlogRow[]]) => {
+  const apply = useCallback(([cats, blogs]: [CategoryRow[], BlogListItem[]]) => {
     setCategories(cats);
     setPosts(blogs);
     setError(null);
@@ -40,8 +32,6 @@ export default function CategoriesPage() {
   );
 
   useEffect(() => {
-    // `alive` stops a slow response from setting state on an unmounted page, and the
-    // promise form keeps every update off the effect's synchronous path.
     let alive = true;
     Promise.all([listCategories(), listBlogs()])
       .then((data) => {
@@ -91,7 +81,6 @@ export default function CategoriesPage() {
               slug: "",
               name: "",
               description: "",
-              // Lands at the end of the list until someone gives it a place.
               sort_order: 1000,
             })
           }
@@ -117,7 +106,7 @@ export default function CategoriesPage() {
               {categories.map((category) => (
                 <li key={category.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
                   <span className="w-8 shrink-0 text-right text-xs tabular-nums text-muted">
-                    {category.sort_order}
+                    {categories.indexOf(category) + 1}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-navy-900">{category.name}</p>
@@ -206,8 +195,6 @@ function CategoryDialog({
             value={name}
             onChange={(e) => {
               setName(e.target.value);
-              // Only auto-derive for a new category: changing an existing slug would
-              // not update the posts that reference it by name anyway.
               if (isNew) setSlug(toSlug(e.target.value));
             }}
           />

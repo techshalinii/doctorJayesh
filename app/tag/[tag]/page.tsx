@@ -15,15 +15,6 @@ import {
   toPostSummary,
 } from "@/lib/content";
 
-/**
- * Migrated tag archives.
- *
- * All 18 are kept at their original URLs but carry `noindex` (decision 2026-09-03): two
- * tags were bulk-applied to 89 posts each and the other 16 hold one or two posts, so none
- * is a coherent archive. Nothing is redirected or dropped — this is reversible once
- * Search Console data exists.
- */
-
 export const dynamicParams = false;
 
 export function generateStaticParams() {

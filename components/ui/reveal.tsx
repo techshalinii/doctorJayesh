@@ -11,16 +11,6 @@ type RevealProps = {
   as?: "div" | "section" | "li" | "article" | "span";
 };
 
-/**
- * Fade + rise into view once, respecting reduced-motion.
- *
- * Same props as the framer-motion version it replaced, so the 18 call sites are unchanged.
- *
- * The "from" state is applied by GSAP in a layout effect rather than by an inline style,
- * which is what keeps this safe without JavaScript: the server sends the element in its
- * final, visible state, and only a browser that will actually run the animation ever hides
- * it. Doing that before paint means no flash of the visible state first.
- */
 export function Reveal({ children, className, delay = 0, y = 24, as: Tag = "div" }: RevealProps) {
   const ref = useRef<HTMLElement>(null);
 
@@ -43,7 +33,6 @@ export function Reveal({ children, className, delay = 0, y = 24, as: Tag = "div"
       );
     }, el);
 
-    // context.revert() kills the tween, its ScrollTrigger, and restores inline styles.
     return () => ctx.revert();
   }, [delay, y]);
 
@@ -54,7 +43,6 @@ export function Reveal({ children, className, delay = 0, y = 24, as: Tag = "div"
   );
 }
 
-/** Container that staggers its StaggerItem children. */
 export function Stagger({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -89,7 +77,6 @@ export function Stagger({ children, className }: { children: ReactNode; classNam
   );
 }
 
-/** Marked with a data attribute so the parent Stagger can collect its children. */
 export function StaggerItem({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div data-stagger-item className={className}>

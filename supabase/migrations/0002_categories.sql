@@ -1,30 +1,7 @@
--- ════════════════════════════════════════════════════════════════════════════
--- Categories — the real topic set
---
--- Run ONCE in Supabase dashboard → SQL Editor → New query → paste → Run.
--- Idempotent: safe to run again.
---
--- Replaces the four placeholder categories seeded by 0001 with the 19 topics the
--- practice actually uses. "All" from the design is NOT a category — it is the
--- filter's "no filter" option and the blog listing renders it itself.
---
--- Spelling: "Tumour", not "Tumor". Both appear in the migrated content but the
--- British form is the house style there by roughly 2:1, and it is what the design
--- shows.
--- ════════════════════════════════════════════════════════════════════════════
-
--- ── display order ───────────────────────────────────────────────────────────
--- The intended order is not alphabetical — it runs from the two surgical
--- specialities, through major conditions, then body regions, then care and
--- lifestyle, then the remaining conditions. Sorting by name would scatter that,
--- so the order is stored rather than inferred.
-
 alter table public.categories
   add column if not exists sort_order integer not null default 1000;
 
 create index if not exists categories_sort_order_idx on public.categories (sort_order, name);
-
--- ── the topics ──────────────────────────────────────────────────────────────
 
 insert into public.categories (slug, name, description, sort_order) values
   ('brain',      'Brain',      'The brain itself — anatomy, function, and what goes wrong.', 10),
@@ -50,16 +27,6 @@ on conflict (slug) do update
   set name        = excluded.name,
       description = excluded.description,
       sort_order  = excluded.sort_order;
-
--- ── retire the placeholders ─────────────────────────────────────────────────
---
--- 0001 seeded four made-up categories to give a fresh project something to pick
--- from. They are removed now — but ONLY where no post references them. A post
--- stores its category by NAME, so deleting one that is in use would leave that
--- post pointing at a category the dropdown no longer offers.
---
--- Anything still in use is left alone and will simply appear alongside the new
--- topics; reassign those posts in /admin and re-run this to finish the cleanup.
 
 delete from public.categories
  where slug in ('brain-surgery', 'spine-surgery', 'patient-guides', 'neurology')

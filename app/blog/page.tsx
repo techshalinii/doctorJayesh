@@ -11,15 +11,6 @@ const doc = getDocByFileSlug("blog")!;
 
 export const metadata: Metadata = metadataFromDoc(doc);
 
-/**
- * Regenerated at most once a minute.
- *
- * This is what makes a scheduled post appear without anything changing in the
- * database: the page is rebuilt on the first request after the window lapses, and
- * `getMergedPostSummaries()` re-applies the visibility rule against the clock at
- * that moment. Publishing from the admin also calls /api/revalidate, which drops
- * this page immediately rather than waiting out the minute.
- */
 export const revalidate = 60;
 
 export default async function BlogPage() {
@@ -35,7 +26,7 @@ export default async function BlogPage() {
       />
       <section className="py-12 lg:py-14">
         <Container>
-          <PostsExplorer posts={posts} />
+          <PostsExplorer posts={posts} pageSize={12} />
         </Container>
       </section>
       <CtaBand />

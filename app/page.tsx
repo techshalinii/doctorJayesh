@@ -36,9 +36,9 @@ export default function HomePage() {
       <Awards />
       <Videos />
       <Resources />
-      <Faqs />
       <Testimonials />
       <AppointmentCTA />
+      <Faqs />
     </>
   );
 }

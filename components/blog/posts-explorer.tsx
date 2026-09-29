@@ -1,14 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ArrowUpRight, Search } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { PostSummary } from "@/lib/content";
 import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
-
-
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
@@ -45,26 +43,103 @@ function PostCard({ post }: { post: PostSummary }) {
   );
 }
 
+function pageList(current: number, total: number): (number | "gap")[] {
+  const wanted = new Set([1, total, current - 1, current, current + 1]);
+  const pages = [...wanted].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const out: (number | "gap")[] = [];
+  for (const [i, n] of pages.entries()) {
+    if (i > 0 && n - pages[i - 1] > 1) out.push(n - pages[i - 1] === 2 ? n - 1 : "gap");
+    out.push(n);
+  }
+  return out;
+}
+
+function Pagination({
+  current,
+  total,
+  onChange,
+}: {
+  current: number;
+  total: number;
+  onChange: (page: number) => void;
+}) {
+  const pill =
+    "inline-flex h-9 items-center justify-center rounded-full bg-surface-2 text-sm font-medium text-navy-900 transition-colors hover:bg-navy-900 hover:text-white dark:text-white dark:hover:bg-white dark:hover:text-navy-950";
+
+  return (
+    <nav aria-label="Blog pages" className="mt-12 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+      <button
+        type="button"
+        onClick={() => onChange(current - 1)}
+        disabled={current === 1}
+        aria-label="Previous page"
+        className={cn(pill, "gap-1.5 px-3 sm:px-4 disabled:pointer-events-none disabled:opacity-50")}
+      >
+        <ChevronLeft className="h-4 w-4" />
+        <span className="hidden sm:inline">Previous</span>
+      </button>
+
+      <ol className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+        {pageList(current, total).map((item, i) =>
+          item === "gap" ? (
+            <li key={`gap-${i}`} aria-hidden className="w-5 text-center text-sm text-navy-900 dark:text-white">
+              …
+            </li>
+          ) : (
+            <li key={item}>
+              <button
+                type="button"
+                onClick={() => onChange(item)}
+                aria-label={`Page ${item}`}
+                aria-current={item === current ? "page" : undefined}
+                className={cn(
+                  pill,
+                  "w-9 tabular-nums",
+                  item === current && "bg-navy-900 text-white dark:bg-white dark:text-navy-950",
+                )}
+              >
+                {item}
+              </button>
+            </li>
+          ),
+        )}
+      </ol>
+
+      <button
+        type="button"
+        onClick={() => onChange(current + 1)}
+        disabled={current === total}
+        aria-label="Next page"
+        className={cn(pill, "gap-1.5 px-3 sm:px-4 disabled:pointer-events-none disabled:opacity-50")}
+      >
+        <span className="hidden sm:inline">Next</span>
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </nav>
+  );
+}
+
 export function PostsExplorer({
   posts: allPosts,
   limit,
   showFeatured = true,
   showControls = true,
+  pageSize,
 }: {
   posts: PostSummary[];
   limit?: number;
   showFeatured?: boolean;
-  /** The homepage teaser renders a fixed 3 posts, so the filter + search row is dead weight there. */
   showControls?: boolean;
+  pageSize?: number;
 }) {
-  // Derived from the posts themselves — migrated WordPress content carries no real
-  // categories (everything was "uncategorized"), so only "All" renders for now.
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(allPosts.map((p) => p.category).filter(Boolean) as string[]))],
     [allPosts],
   );
   const [active, setActive] = useState<string>("All");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const listTop = useRef<HTMLDivElement>(null);
 
   const featured = showFeatured ? allPosts.find((p) => p.featured) : undefined;
 
@@ -78,9 +153,18 @@ export function PostsExplorer({
     return limit ? list.slice(0, limit) : list;
   }, [allPosts, active, query, featured, limit]);
 
+  const totalPages = pageSize ? Math.max(1, Math.ceil(filtered.length / pageSize)) : 1;
+  const current = Math.min(page, totalPages);
+  const visible = pageSize ? filtered.slice((current - 1) * pageSize, current * pageSize) : filtered;
+
+  const goToPage = (next: number) => {
+    setPage(Math.min(Math.max(1, next), totalPages));
+    listTop.current?.scrollIntoView({ block: "start" });
+  };
+
   return (
     <div>
-      {featured && (
+      {featured && current === 1 && (
         <Link
           href={`/${featured.slug}/`}
           className="group mb-16 grid gap-8 md:grid-cols-2 md:items-center md:gap-12"
@@ -113,13 +197,18 @@ export function PostsExplorer({
         </Link>
       )}
 
-      {/* controls — minimal text toggles */}
-      <div className={cn("mb-2 flex-col gap-5 sm:flex-row sm:items-center sm:justify-between", showControls ? "flex" : "hidden")}>
+      <div
+        ref={listTop}
+        className={cn("mb-2 flex-col gap-5 sm:flex-row sm:items-center sm:justify-between", showControls ? "flex" : "hidden")}
+      >
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           {categories.map((c) => (
             <button
               key={c}
-              onClick={() => setActive(c)}
+              onClick={() => {
+                setActive(c);
+                setPage(1);
+              }}
               className={cn(
                 "border-b-2 pb-1 text-sm font-medium transition-colors",
                 active === c
@@ -135,7 +224,10 @@ export function PostsExplorer({
           <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
             placeholder="Search articles"
             aria-label="Search articles"
             className="w-full border-b border-border bg-transparent py-2 pl-7 pr-2 text-sm outline-none transition-colors placeholder:text-muted/70 focus:border-teal-500"
@@ -147,12 +239,21 @@ export function PostsExplorer({
         <p className="border-t border-border py-20 text-center text-muted">No articles match your search.</p>
       ) : (
         <div className={cn("grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3", showControls ? "mt-8" : "mt-0")}>
-          {filtered.map((p, i) => (
+          {visible.map((p, i) => (
             <Reveal key={p.slug} delay={(i % 3) * 0.06}>
               <PostCard post={p} />
             </Reveal>
           ))}
         </div>
+      )}
+
+      {pageSize && totalPages > 1 && (
+        <>
+          <Pagination current={current} total={totalPages} onChange={goToPage} />
+          <p className="mt-3 text-center text-xs text-muted tabular-nums">
+            Showing {(current - 1) * pageSize + 1}–{Math.min(current * pageSize, filtered.length)} of {filtered.length} articles
+          </p>
+        </>
       )}
     </div>
   );

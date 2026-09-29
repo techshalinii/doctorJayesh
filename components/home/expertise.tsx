@@ -6,20 +6,6 @@ import { Reveal } from "@/components/ui/reveal";
 import { CardImage } from "@/components/ui/card-image";
 import { expertise } from "@/lib/data";
 
-/**
- * Card photography, by position — `expertise` is an ordered list and these follow it.
- *
- * Keyed by index rather than slug because two filenames in the brief do not match their
- * slug (`endoscopic-skull-base` -> endoscopic-skull-base-surgery.jpg, and
- * `minimally-invasive-spine` -> minimally-invasive-spine-surgery.jpg). Index keeps the
- * mapping honest instead of quietly renaming the data's slugs to suit the assets.
- *
- * All six now use photography the practice already owns, re-cropped to 3:2 from
- * /public/images/blog and /wp-content/uploads. Three of the alt strings differ from the
- * original brief because the available photograph shows something else — alt has to
- * describe the image that is actually there, not the one that was planned. Swap in
- * closer photography under these filenames and the alt should be revised with it.
- */
 const PHOTOS = [
   { src: "/images/expertise/brain-tumor-surgery.jpg", alt: "Neurosurgeon planning brain tumor surgery using neuro-navigation" },
   { src: "/images/expertise/spine-surgery.jpg", alt: "Spine surgeon reviewing a spinal X-ray with a patient" },
@@ -45,8 +31,6 @@ export function Expertise() {
           </p>
         </div>
 
-        {/* 1 / 2 / 3 columns. The row gap opens up at lg so the photo rows breathe; below
-            that a flat 48px reads better in a single stack. */}
         <div className="mt-16 grid grid-cols-1 items-start gap-12 min-[601px]:grid-cols-2 lg:grid-cols-3 lg:gap-x-12 lg:gap-y-16">
           {expertise.map((e, i) => {
             const photo = PHOTOS[i] ?? PHOTOS[0];
@@ -63,8 +47,6 @@ export function Expertise() {
                     sizes="(min-width: 1024px) 30vw, (min-width: 601px) 45vw, 92vw"
                   />
 
-                  {/* Left-aligned on its own row now that the icon that used to sit opposite
-                      it is gone — the flex/space-between row went with it. */}
                   <span className="mt-6 font-display text-lg font-medium tabular-nums text-teal-700/60 transition-colors group-hover:text-navy-800 group-focus-visible:text-navy-800 dark:text-teal-300/60 dark:group-hover:text-teal-300 dark:group-focus-visible:text-teal-300">
                     {String(i + 1).padStart(2, "0")}
                   </span>

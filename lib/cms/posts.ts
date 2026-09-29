@@ -6,26 +6,7 @@ import { applyVisibility, isVisible } from "@/lib/cms/visibility";
 import { parseBlocks } from "@/lib/cms/blocks";
 import type { BlogRow, FaqItem } from "@/lib/cms/types";
 
-/**
- * Read path for CMS posts.
- *
- * Three guarantees, in order of importance:
- *
- * 1. **Never 500.** Every failure — no credentials, network error, RLS change,
- *    malformed row — resolves to the last good snapshot, or to an empty list. The
- *    site then renders with only its 180 migrated markdown posts, which is exactly
- *    what it did before the CMS existed.
- * 2. **Never leak.** Rows come back through `applyVisibility()`, and are filtered
- *    again by `isVisible()` after parsing so a row that became due between fetch
- *    and render is not held back, and one that is not due cannot slip through a
- *    stale snapshot.
- * 3. **Cheap.** One query serves the listing, the sitemap, every article page and
- *    every related-post lookup, cached ~60s and refreshed in the background so a
- *    request never waits on a revalidation.
- */
-
 const TTL_MS = 60_000;
-/** After a failure, stop hammering a sick database for this long. */
 const BACKOFF_MS = 30_000;
 
 interface Snapshot {
@@ -102,13 +83,6 @@ async function fetchVisible(): Promise<BlogRow[]> {
   return (data ?? []).map((row) => normalise(row as Record<string, unknown>));
 }
 
-/**
- * Kick a refresh without making the caller wait for it.
- *
- * The promise is stored so concurrent requests share one query, and its rejection
- * is swallowed here — a background refresh failing must never surface as an
- * unhandled rejection, let alone as a 500.
- */
 function refresh(): Promise<BlogRow[]> {
   if (inflight) return inflight;
   inflight = fetchVisible()
@@ -128,7 +102,6 @@ function refresh(): Promise<BlogRow[]> {
   return inflight;
 }
 
-/** Every currently-visible CMS post, newest first. Resolves to `[]` on any failure. */
 export async function getCmsPosts(): Promise<BlogRow[]> {
   if (!CMS_ENABLED) return [];
 
@@ -137,49 +110,21 @@ export async function getCmsPosts(): Promise<BlogRow[]> {
 
   if (fresh) return filterDue(snapshot!.rows);
 
-  // Stale but usable: serve it and refresh behind the request, unless the last
-  // attempt failed recently — in which case keep serving stale and stay quiet.
   if (snapshot) {
     if (now >= retryAfter) void refresh();
     return filterDue(snapshot.rows);
   }
 
-  // Cold and recently failed: do not retry on this request.
   if (now < retryAfter) return [];
 
   return filterDue(await refresh());
 }
 
-/**
- * Re-check the rule against the clock at RENDER time.
- *
- * A snapshot is up to a minute old, so a post scheduled inside that window is
- * already in it but not yet due. Filtering here — rather than trusting the fetch —
- * is what makes the cache safe to share between the listing, the sitemap and the
- * article route.
- */
 function filterDue(rows: BlogRow[]): BlogRow[] {
   const now = new Date();
   return rows.filter((row) => isVisible(row, now));
 }
 
-/**
- * Deliberately no `getCmsPostBySlug` or `getCmsSlugs` here.
- *
- * Both belong to lib/cms/public.ts, which is the only module that knows the migrated
- * markdown owns some slugs. A by-slug lookup on this raw reader would happily return a
- * CMS row for a URL `content/` already serves, which is exactly the precedence bug the
- * merge layer exists to prevent — so the lookup lives where the rule does.
- */
-
-/**
- * Drop the memo so the next read hits the database. Used by /api/revalidate.
- *
- * Process-local, so on a multi-instance deployment it clears the instance that handled
- * the request and no other. That is fine and deliberate: the others expire their own
- * snapshot within the same 60 seconds ISR already promises. A cross-instance flush
- * would need a shared cache, which is a lot of machinery to shave seconds off a blog.
- */
 export function invalidateCmsCache(): void {
   snapshot = null;
   retryAfter = 0;

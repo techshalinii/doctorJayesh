@@ -3,11 +3,6 @@ import { Reveal } from "@/components/ui/reveal";
 import { Icon } from "@/components/ui/icon";
 import { threePillars } from "@/lib/data";
 
-/**
- * Section 2 of the live WordPress homepage — three icon boxes under the hero.
- * Copy verbatim from the Elementor export; the icons are ours (the export carried
- * Elementor icon classes, not assets).
- */
 export function ThreePillars() {
   return (
     <section className="border-b border-border py-8 lg:py-10">

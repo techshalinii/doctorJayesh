@@ -31,6 +31,9 @@ Each is idempotent, so re-running is safe.
 - `0001_blog_cms.sql` — schema, security rules, storage bucket
 - `0002_categories.sql` — the 19 topics, and a `sort_order` column so they are not
   listed alphabetically
+- `0003_ai_generator.sql` — the AI generator's five tables. Purely additive: it does not
+  alter `blogs`, `blog_versions`, `categories` or `media`, and it does not go near
+  `blog_is_visible()` or the public read policy
 
 Together they create:
 
@@ -178,11 +181,104 @@ without it those rules say so instead of failing on merit.
 
 ---
 
-## 5. Tests
+## 5. The AI blog generator
+
+An **addition** to everything above, not a replacement for any of it. A generated post is
+an ordinary row in `blogs`: it is edited in the same editor, scored by the same SEO rules,
+scheduled by the same scheduler and published by the same rule. Nothing in this feature
+can publish.
+
+### The flow
+
+```
+/admin/generate → Gemini → draft in `blogs` → existing editor → Schedule → existing publishing
+```
+
+The generator returns values; the **browser** then calls the same `createBlog()` the
+editor's Save button uses. There is one way a post comes into existence and the generator
+uses it rather than adding a second.
+
+### Content Brain — `/admin/content-brain`
+
+The 180 migrated markdown articles are **never** sent to a model per generation. They are
+analysed once into a stored profile — tone, structure, heading habits, topic clusters,
+content gaps, SEO patterns, image style — and each generation is handed that profile
+instead. Even the one analysis is sampled (45 articles, evenly spread and deterministic):
+past a few dozen, more input stops improving a description of a house style.
+
+Refresh it after a batch of new posts, or whenever the writing has moved on. Nothing is
+sent to a model until you press the button.
+
+### Duplicate detection
+
+Runs **locally**, against the full corpus — markdown and Supabase, drafts included — and
+costs nothing, so the Generate page checks it as you type. Titles, slugs, excerpts and
+focus keywords are compared; an exact slug collision reports at 100%. It never blocks:
+it shows what exists and offers *Use a different topic* or *Continue anyway*.
+
+### Provider abstraction
+
+Only `lib/ai/gemini.ts` knows Gemini exists. Everything else talks to the `AIProvider`
+interface in `lib/ai/types.ts`.
+
+```
+AI_PROVIDER=gemini   the real thing; needs GEMINI_API_KEY
+AI_PROVIDER=mock     answers locally — no network, no key, no quota
+(unset)              gemini when a key exists, otherwise mock
+```
+
+The Generate page states which is live, and labels mock output loudly. Every model reply
+is validated with Zod and retried once; a reply that still will not validate fails the job
+rather than being saved.
+
+### Partial failure
+
+Only failing to write the **article** fails a run. Image suggestions, SEO repair and the
+three review passes each record their step and carry on, because the article is the
+expensive part and must not be thrown away with them.
+
+### Review, and what it does not do
+
+Three passes — grammar, style, medical. The medical pass flags claims a clinician should
+verify; the prompt forbids inventing citations, so an empty source list is the expected
+answer. **Findings block nothing.** They are shown in the editor and stored with the post;
+publishing remains a human action and the visibility rule does not read them.
+
+### Images
+
+Prompts and alt text only. Nothing here generates an image file, and no placeholder is
+ever attached as though it were a photograph. Copy the prompt, make the image in your own
+tool, upload it through the existing media picker.
+
+Generating images in the CMS was built and removed on 2026-09-23: Gemini bills image
+models separately from text, and the practice would rather draw them elsewhere than carry
+a per-image cost here. `lib/ai/types.ts` keeps `generateImageSuggestions`, which is the
+text half and stays.
+
+### Monthly batch
+
+`/admin/generate → Monthly topics` proposes ~14 candidates, shortlists four across a mix
+of intents, and lets you approve, edit or reject each before anything is written.
+
+It is **started by hand**, and that is a consequence of this CMS's security model rather
+than an omission: every write is made as the signed-in admin under RLS and there is no
+service-role key in the project, so a timer has no identity to write as. `ai_settings`
+records the schedule and the page shows when a run is due. `auto_publish` defaults to
+false and a database constraint forbids setting it while `approval_required` is on.
+
+### What it does not touch
+
+`content/*.md` is never written, converted or edited. Generated posts go to Supabase only.
+
+---
+
+## 6. Tests
 
 ```bash
-npm run check:supabase   # confirms the project's schema and security rules
-npm test          # 46 unit tests — visibility, SEO scoring, import, rendering, timezones
+npm run check:supabase   # confirms the project's schema and security rules,
+                         # including the AI generator's five tables
+npm test          # 82 unit tests — visibility, SEO scoring, import, rendering, timezones,
+                  #                  and the AI generator (against the mock provider)
 npm run build && npm start
 npm run test:http # acceptance tests against the running site
 ```
@@ -194,7 +290,7 @@ runs.
 
 ---
 
-## 6. Rolling back
+## 7. Rolling back
 
 Set `CMS_ENABLED=false` and redeploy. Every reader short-circuits, no Supabase call is
 made anywhere, and the site serves the migrated markdown exactly as before. No data is

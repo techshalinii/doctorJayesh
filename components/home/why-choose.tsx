@@ -5,12 +5,6 @@ import { Stagger, StaggerItem } from "@/components/ui/reveal";
 import { VideoEmbed } from "@/components/ui/video-embed";
 import { whyChooseSardhara, homeInlineVideos } from "@/lib/data";
 
-/**
- * Section 7 of the live WordPress homepage.
- *
- * The export attaches a video to this section, not to the gallery further down, so it
- * renders here — beside the three reasons, as on the live page. Copy is verbatim.
- */
 export function WhyChoose() {
   return (
     <section id="whychooseus" className="py-14 lg:py-18">
@@ -20,11 +14,10 @@ export function WhyChoose() {
           index="03"
           eyebrow="Why Choose Us"
           title="Why Choose Dr. Jayesh Sardhara?"
-          description="World-class technology and international training, applied with genuine warmth — the reasons thousands trust us with their brain and spine health."
+         
         />
 
         <div className="mt-12 grid gap-x-14 gap-y-10 lg:grid-cols-12">
-          {/* three reasons */}
           <Stagger className="lg:col-span-7">
             <div className="border-t border-navy-900/12 dark:border-white/12">
               {whyChooseSardhara.map((w, i) => (
@@ -46,7 +39,6 @@ export function WhyChoose() {
             </Button>
           </Stagger>
 
-          {/* section video */}
           <div className="lg:col-span-5">
             <div className="lg:sticky lg:top-28">
               <VideoEmbed video={homeInlineVideos.whyChoose} />

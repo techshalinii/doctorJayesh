@@ -2,19 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { History, RotateCcw } from "lucide-react";
-import { listVersions, restoreVersion } from "@/lib/admin/api";
+import { listVersions, restoreVersion, type BlogVersionSummary } from "@/lib/admin/api";
 import { formatInZone } from "@/lib/admin/timezone";
-import type { BlogVersionRow } from "@/lib/cms/types";
 import { AdminButton, Banner, Modal } from "@/components/admin/ui";
 
-/**
- * Snapshots taken before every save, newest first.
- *
- * Restoring writes the old CONTENT back over the current row — and deliberately leaves
- * `status`, `publish_at` and `published_at` alone (see `restoreVersion`). Reverting a
- * typo on a live article must not also unpublish it, and a restore is itself a save, so
- * it produces a snapshot of its own and can be undone in turn.
- */
 export function VersionHistory({
   blogId,
   onClose,
@@ -24,7 +15,7 @@ export function VersionHistory({
   onClose: () => void;
   onRestored: () => void;
 }) {
-  const [versions, setVersions] = useState<BlogVersionRow[]>([]);
+  const [versions, setVersions] = useState<BlogVersionSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<number | null>(null);
@@ -36,12 +27,12 @@ export function VersionHistory({
       .finally(() => setLoading(false));
   }, [blogId]);
 
-  const restore = async (version: BlogVersionRow) => {
+  const restore = async (version: BlogVersionSummary) => {
     if (!window.confirm(`Restore the content from version ${version.version}?`)) return;
     setBusy(version.version);
     setError(null);
     try {
-      await restoreVersion(blogId, version);
+      await restoreVersion(blogId, version.id);
       onRestored();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Restore failed.");
@@ -74,7 +65,7 @@ export function VersionHistory({
                 {version.note && <span className="text-muted"> · {version.note}</span>}
               </p>
               <p className="truncate text-xs text-muted">
-                {formatInZone(version.created_at)} · {version.snapshot.title || "(untitled)"}
+                {formatInZone(version.created_at)} · {version.title || "(untitled)"}
               </p>
             </div>
             <AdminButton

@@ -5,14 +5,6 @@ import { marked } from "marked";
 import { OG_IMAGE } from "@/lib/seo";
 import type { Metadata } from "next";
 
-/**
- * Loader for the migrated WordPress content in `content/`.
- *
- * Every file is plain Markdown with a YAML frontmatter block produced by the Phase 2
- * extraction (see _migration/EXTRACTION-REPORT.md). Bodies contain no JSX, so they are
- * compiled to HTML at build time rather than evaluated as MDX — content stays inert data.
- */
-
 const CONTENT_DIR = path.join(process.cwd(), "content");
 
 export interface FeaturedImage {
@@ -23,7 +15,6 @@ export interface FeaturedImage {
 
 export interface ContentDoc {
   title: string;
-  /** Original WordPress path, trailing slash included — e.g. "/bulging-disc-vs-herniated-disc/" */
   slug: string;
   date: string | null;
   modified: string | null;
@@ -35,22 +26,13 @@ export interface ContentDoc {
   featuredImage: FeaturedImage | null;
   noindex?: boolean;
   contentSource: "xml" | "rawHtml" | "none";
-  /** Verbatim from the crawl. Never regenerate these. */
   seo: Record<string, string>;
-  /** JSON-LD strings captured byte-for-byte from the live site. */
   schema: string[];
-  /** Raw Markdown body. */
   body: string;
-  /** Next.js route path, no trailing slash — "" for the home page. */
   route: string;
-  /** Path relative to content/, without extension — "about" or "tag/paralysis". */
   fileSlug: string;
 }
 
-/**
- * Slugs that are served by their own hand-built route rather than by `app/[slug]`.
- * These keep the template's design; only their metadata and JSON-LD come from `content/`.
- */
 export const STATIC_ROUTE_SLUGS: ReadonlySet<string> = new Set([
   "index",
   "about",
@@ -58,6 +40,7 @@ export const STATIC_ROUTE_SLUGS: ReadonlySet<string> = new Set([
   "brain-surgery",
   "spine-surgery",
   "news-awards",
+  "fellowship",
 ]);
 
 function readAll(): ContentDoc[] {
@@ -71,9 +54,6 @@ function readAll(): ContentDoc[] {
       }
       if (!entry.name.endsWith(".md")) continue;
 
-      // Normalised to LF before parsing. The repo stores these files with LF, but a Windows
-      // checkout under core.autocrlf=true rewrites them to CRLF — which the frontmatter
-      // regex below would not match, silently dropping every document.
       const raw = fs.readFileSync(full, "utf8").replace(/\r\n/g, "\n");
       const match = /^---\n([\s\S]*?)\n---\n?/.exec(raw);
       if (!match) continue;
@@ -86,9 +66,6 @@ function readAll(): ContentDoc[] {
 
       docs.push({
         ...fm,
-        // Display strings get WordPress's wptexturize treatment so headings and excerpts
-        // match what was rendered — and indexed — on the live site. `seo` and `schema` are
-        // deliberately NOT texturized: they must stay byte-identical to the capture.
         title: texturize(fm.title ?? ""),
         excerpt: texturize(fm.excerpt ?? ""),
         body: raw.slice(match[0].length),
@@ -103,7 +80,6 @@ function readAll(): ContentDoc[] {
 
 let cache: ContentDoc[] | null = null;
 
-/** All migrated documents. Read once per process. */
 export function getAllDocs(): ContentDoc[] {
   if (!cache) cache = readAll();
   return cache;
@@ -113,7 +89,6 @@ export function getDocByFileSlug(fileSlug: string): ContentDoc | undefined {
   return getAllDocs().find((d) => d.fileSlug === fileSlug);
 }
 
-/** Blog posts, newest first. */
 export function getPosts(): ContentDoc[] {
   return getAllDocs()
     .filter((d) => d.postType === "post")
@@ -126,15 +101,10 @@ export function getTagDocs(): ContentDoc[] {
     .sort((a, b) => a.fileSlug.localeCompare(b.fileSlug));
 }
 
-/** Posts carrying a given tag slug, newest first. */
 export function getPostsByTag(tag: string): ContentDoc[] {
   return getPosts().filter((p) => p.tags.includes(tag));
 }
 
-/**
- * Single-segment slugs served by `app/[slug]`: every migrated post plus the migrated
- * pages that have no hand-built route of their own.
- */
 export function getDynamicRootDocs(): ContentDoc[] {
   return getAllDocs().filter(
     (d) =>
@@ -146,51 +116,25 @@ export function getDynamicRootDocs(): ContentDoc[] {
 
 marked.setOptions({ gfm: true, breaks: false });
 
-/**
- * Drop a leading level-1 heading from a body.
- *
- * Every body-rendered route already emits the page <h1> itself — <PageHero> for migrated
- * pages, the article header for posts. Elementor pages whose first block was a heading
- * therefore produced a duplicate <h1> (an accessibility and SEO defect). Strip it.
- */
 export function stripLeadingH1(body: string): string {
   return body.replace(/^\s*#\s+[^\n]*(?:\r?\n)+/, "");
 }
 
-/**
- * A focused port of WordPress's `wptexturize()`.
- *
- * WordPress applied this to titles and post content at render time, so the live site showed
- * curly quotes, dashes and ellipses while the WXR export stores the raw typed characters.
- * Running it at build time keeps the new site character-identical to what was indexed, and
- * makes future content behave the same way.
- *
- * Handles: apostrophes, single/double quotes, `--`/`---`, `...`.
- * Deliberately omits WordPress's `(c)`/`(tm)`/`x` multiplication rules — they misfire more
- * often than they help.
- */
 export function texturize(text: string): string {
   return text
     .replace(/\.\.\./g, "\u2026")
     .replace(/(^|[^-])---([^-]|$)/g, "$1\u2014$2")
     .replace(/(^|\s)--(\s|$)/g, "$1\u2013$2")
-    // apostrophe inside a word, or before a decade ('90s)
     .replace(/(\w)'(\w)/g, "$1\u2019$2")
     .replace(/'(\d\d(?:s)?\b)/g, "\u2019$1")
-    // double quotes: opening after start/space/open-bracket, closing otherwise
     .replace(/(^|[\s([{<])"/g, "$1\u201c")
     .replace(/"/g, "\u201d")
-    // remaining single quotes
     .replace(/(^|[\s([{<])'/g, "$1\u2018")
     .replace(/'/g, "\u2019");
 }
 
 const SKIP_TEXTURIZE = /^(code|pre|script|style|kbd|samp|var)$/i;
 
-/**
- * Apply `texturize` to the text nodes of an HTML string, never to tags, attributes, or the
- * contents of code-ish elements.
- */
 export function texturizeHtml(html: string): string {
   let out = "";
   let i = 0;
@@ -211,15 +155,6 @@ export function texturizeHtml(html: string): string {
   out += skipDepth > 0 ? tail : texturize(tail);
   return out;
 }
-
-/* ── image quality ──────────────────────────────────────────────────────────
- * WordPress often wrote a generated crop (`-300x200`) into the markup while the
- * full-size original sat unused in the same folder. See _migration/IMAGE-QUALITY.md.
- *
- * `upgradeImages` swaps each <img src> to the largest variant on disk and pins
- * width/height to the ORIGINAL referenced dimensions, so the rendered box is unchanged
- * and only the pixel density improves.
- */
 
 const THUMB_RE = /^(.*)-(\d{2,4})x(\d{2,4})(\.[a-zA-Z0-9]+)$/;
 
@@ -255,7 +190,6 @@ function intrinsicSize(abs: string): { w: number; h: number } | null {
 
 const bestCache = new Map<string, { src: string; w: number; h: number } | null>();
 
-/** Largest on-disk variant of a `/wp-content/uploads/...` path, or null if it is already it. */
 export function bestVariant(src: string): { src: string; w: number; h: number } | null {
   if (bestCache.has(src)) return bestCache.get(src)!;
   const result = (() => {
@@ -282,10 +216,6 @@ export function bestVariant(src: string): { src: string; w: number; h: number } 
   return result;
 }
 
-/**
- * Rewrite <img> tags in rendered HTML to the sharpest available file, at unchanged
- * rendered dimensions. Also adds lazy loading — body images are all below the fold.
- */
 export function upgradeImages(html: string): string {
   return html.replace(/<img\s+([^>]*?)src="([^"]+)"([^>]*?)>/g, (whole, pre: string, src: string, post: string) => {
     if (!src.startsWith("/wp-content/uploads/")) return whole;
@@ -298,18 +228,10 @@ export function upgradeImages(html: string): string {
   });
 }
 
-/** Compile a document body to HTML at build time. */
 export function renderMarkdown(body: string): string {
   return upgradeImages(texturizeHtml(marked.parse(body, { async: false }) as string));
 }
 
-/**
- * Build Next metadata from the STORED seo block only.
- *
- * Nothing here is invented or supplemented — every value comes from the crawl capture in
- * frontmatter. `title.absolute` bypasses the root layout's title template so the stored
- * title is emitted exactly as WordPress had it.
- */
 export function metadataFromDoc(doc: ContentDoc): Metadata {
   const seo = doc.seo ?? {};
   const meta: Metadata = {};
@@ -319,23 +241,10 @@ export function metadataFromDoc(doc: ContentDoc): Metadata {
 
   meta.robots = doc.noindex ? { index: false, follow: true } : seo.robots || undefined;
 
-  // `null`, not `undefined` — Next treats undefined as "inherit from the layout", which would
-  // silently reintroduce the root layout's defaults on pages where WordPress emitted nothing.
-  // The 19 archive URLs are the clearest case: they had no description and no og:/twitter: tags
-  // at all. `keywords` and `authors` are always suppressed because the captured seo block does
-  // not contain them, so there is no stored value to emit.
   meta.description = seo.description || null;
   meta.keywords = null;
   meta.authors = null;
 
-  // Built as whole literals so TypeScript can discriminate the og:type / twitter:card
-  // unions. Only TEXT keys present in the capture are emitted — no title, description,
-  // url, site_name or locale is invented.
-  //
-  // `images` is the one addition to the capture. WordPress emitted no og:image on any of
-  // the 203 URLs, so a shared link showed no preview card anywhere; unlike the text keys
-  // there is no indexed value being overwritten, and og:image is not indexed copy. It is
-  // attached to indexable documents only — a noindex archive has no reason to carry one.
   const ogKeys = ["og:title", "og:description", "og:url", "og:site_name", "og:locale"];
   if (ogKeys.some((k) => seo[k]) || seo["og:type"]) {
     const common = {
@@ -367,11 +276,9 @@ export function metadataFromDoc(doc: ContentDoc): Metadata {
   return meta;
 }
 
-/** Shape consumed by the blog listing components. */
 export interface PostSummary {
   slug: string;
   title: string;
-  /** Absent for migrated posts — WordPress only ever used one category, "uncategorized". */
   category?: string;
   excerpt: string;
   readingTime: string;
@@ -380,7 +287,6 @@ export interface PostSummary {
   featured?: boolean;
 }
 
-/** Reading time derived from body length (200 wpm) — WordPress stored none. */
 function readingTime(body: string): string {
   const words = body.split(/\s+/).filter(Boolean).length;
   return `${Math.max(1, Math.round(words / 200))} min read`;
@@ -397,7 +303,6 @@ export function toPostSummary(doc: ContentDoc): PostSummary {
     };
 }
 
-/** Post summaries, newest first. The newest is flagged `featured` for the listing hero. */
 export function getPostSummaries(): PostSummary[] {
   return getPosts().map((d, i) => ({ ...toPostSummary(d), featured: i === 0 }));
 }

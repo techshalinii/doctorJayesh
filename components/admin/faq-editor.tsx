@@ -4,16 +4,6 @@ import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import type { FaqItem } from "@/lib/cms/types";
 import { AdminButton, Input, Textarea } from "@/components/admin/ui";
 
-/**
- * Question/answer pairs for the article's FAQ section.
- *
- * Order matters — it is the order they render in and the order they appear in the
- * FAQPage JSON-LD — so the rows can be moved rather than only added and removed.
- *
- * An item is only emitted to the page when BOTH fields are filled (see `parseFaq` in
- * lib/cms/posts.ts), which is what stops a half-typed question becoming structured
- * data claiming an answer the page does not contain.
- */
 export function FaqEditor({
   value,
   onChange,

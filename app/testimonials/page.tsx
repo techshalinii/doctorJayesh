@@ -20,8 +20,6 @@ export default function TestimonialsPage() {
 
   return (
     <>
-      {/* Template-only route: keeps the generated Physician schema. Migrated pages
-          render <StoredJsonLd /> instead — the two are never merged. */}
       <JsonLd />
       <BreadcrumbJsonLd
         trail={[
@@ -36,7 +34,6 @@ export default function TestimonialsPage() {
         description={`Behind our ${doctor.rating.toFixed(1)}★ rating from ${doctor.reviews} Google reviews are thousands of people who got their lives back.`}
       />
 
-      {/* featured real review */}
       <section className="py-14 lg:py-18">
         <Container>
           <Reveal>
@@ -57,7 +54,6 @@ export default function TestimonialsPage() {
         </Container>
       </section>
 
-      {/* google reviews widget */}
       <section className="border-t border-border bg-surface/50 py-14 lg:py-18">
         <Container>
           <span className="flex items-center gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-300">

@@ -3,24 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarClock, FileText, Plus, TrendingUp } from "lucide-react";
-import { listBlogs } from "@/lib/admin/api";
+import { listBlogs, type BlogListItem } from "@/lib/admin/api";
 import { isVisible } from "@/lib/cms/visibility";
-import { scoreMetaDescription, scoreSeoTitle } from "@/lib/cms/seo-score";
+import { normaliseForComparison, scoreMetaDescription, scoreSeoTitle } from "@/lib/cms/seo-score";
 import { formatInZone } from "@/lib/admin/timezone";
-import type { BlogRow } from "@/lib/cms/types";
 import { Banner, Panel, StatusBadge } from "@/components/admin/ui";
 
-/**
- * Dashboard.
- *
- * Answers the three questions someone actually opens this page with: what is going out
- * next, what is half-finished, and what is going to underperform in search. The SEO
- * column is the only one that needed inventing — it runs the same scorer the editor
- * uses over every post, so the weakest metadata surfaces without anyone opening posts
- * one at a time.
- */
 export default function DashboardPage() {
-  const [posts, setPosts] = useState<BlogRow[]>([]);
+  const [posts, setPosts] = useState<BlogListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +28,19 @@ export default function DashboardPage() {
       .sort((a, b) => Date.parse(a.publish_at ?? "0") - Date.parse(b.publish_at ?? "0"));
     const drafts = posts.filter((p) => p.status === "draft");
 
+    const countOf = (values: string[]) => {
+      const counts = new Map<string, number>();
+      for (const value of values) {
+        const key = normaliseForComparison(value);
+        if (key) counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+      return counts;
+    };
+    const titleCounts = countOf(posts.map((p) => p.seo_title));
+    const descriptionCounts = countOf(posts.map((p) => p.meta_description));
+    const repeated = (counts: Map<string, number>, value: string) =>
+      (counts.get(normaliseForComparison(value)) ?? 0) > 1 ? [value] : [];
+
     const scored = posts
       .filter((p) => p.status !== "archived")
       .map((p) => {
@@ -45,8 +48,8 @@ export default function DashboardPage() {
           pageTitle: p.title,
           focusKeyword: p.focus_keyword,
           excerpt: p.excerpt,
-          otherTitles: posts.filter((o) => o.id !== p.id).map((o) => o.seo_title),
-          otherDescriptions: posts.filter((o) => o.id !== p.id).map((o) => o.meta_description),
+          otherTitles: repeated(titleCounts, p.seo_title),
+          otherDescriptions: repeated(descriptionCounts, p.meta_description),
         };
         const title = scoreSeoTitle(p.seo_title, ctx).score;
         const description = scoreMetaDescription(p.meta_description, ctx).score;

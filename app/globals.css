@@ -1,10 +1,8 @@
 @import "tailwindcss";
 
-/* Enable class-based dark mode driven by next-themes (adds `.dark` on <html>) */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* ---- Brand: refined medical burgundy (primary), matched to the practice ---- */
   --color-navy-50: #fbf2f1;
   --color-navy-100: #f5ddda;
   --color-navy-200: #ecbfba;
@@ -17,7 +15,6 @@
   --color-navy-900: #501d1c;
   --color-navy-950: #341210;
 
-  /* ---- Accent: warm rose-burgundy (links, marks, eyebrows) ---- */
   --color-teal-50: #fdf1ef;
   --color-teal-100: #fadbd4;
   --color-teal-200: #f2b8ae;
@@ -29,18 +26,15 @@
   --color-teal-800: #722a28;
   --color-teal-900: #5f2624;
 
-  /* ---- Warm highlight (for gentle gradients) ---- */
   --color-cyan-300: #eaa89f;
   --color-cyan-400: #d97f76;
   --color-cyan-500: #c45f56;
 
-  /* ---- Champagne gold (awards / accents, used sparingly) ---- */
   --color-gold-300: #f2e0aa;
   --color-gold-400: #e6c97e;
   --color-gold-500: #cfa451;
   --color-gold-600: #ac862f;
 
-  /* Extra small-phone breakpoint (default Tailwind starts at sm=640px) */
   --breakpoint-xs: 24rem;
 
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
@@ -49,7 +43,6 @@
   --radius-4xl: 2rem;
   --radius-5xl: 2.75rem;
 
-  /* Soft, clean shadows — no heavy coloured glows */
   --shadow-glow: 0 1px 2px rgb(15 42 74 / 0.05), 0 22px 48px -24px rgb(15 42 74 / 0.28);
   --shadow-card: 0 1px 2px rgb(15 42 74 / 0.05), 0 12px 32px -16px rgb(15 42 74 / 0.14);
   --shadow-soft: 0 1px 3px rgb(15 42 74 / 0.06), 0 16px 40px -22px rgb(15 42 74 / 0.14);
@@ -102,7 +95,8 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 6rem;
-  overflow-x: hidden; /* safety net against accidental horizontal scroll on mobile */
+
+  overflow-x: clip;
 }
 
 body {
@@ -122,7 +116,6 @@ body {
   }
 }
 
-/* ---------- Reusable design utilities ---------- */
 @layer utilities {
   .glass {
     background: color-mix(in srgb, var(--background) 78%, transparent);
@@ -130,7 +123,6 @@ body {
     -webkit-backdrop-filter: blur(16px) saturate(130%);
   }
 
-  /* Restrained monochrome-blue gradient text */
   .text-gradient {
     background-image: linear-gradient(115deg, var(--color-navy-800) 0%, var(--color-navy-500) 60%, var(--color-teal-500) 100%);
     -webkit-background-clip: text;
@@ -165,16 +157,10 @@ body {
   }
 }
 
-/* ---------- Blog article typography ---------- */
 .article {
   color: var(--muted);
   font-size: 1.075rem;
   line-height: 1.8;
-  /* The body is migrated WordPress markdown rendered through dangerouslySetInnerHTML, so
-     the token lengths are not controlled here. Nothing in the current 197 documents is
-     long enough to overflow (checked), but a pasted URL or a long drug/procedure name in
-     a future edit would push the 320px column sideways with no way to scroll it back.
-     Normal prose is unaffected — this only engages on a word that cannot otherwise fit. */
   overflow-wrap: break-word;
 }
 .article > * + * { margin-top: 1.35rem; }
@@ -209,8 +195,6 @@ body {
   color: var(--foreground);
   font-style: italic;
 }
-/* Body images: constrain to the column and keep the aspect ratio. Without this they render
-   at intrinsic size and overflow horizontally — see _migration/IMAGE-QUALITY.md cause C. */
 .article img {
   max-width: 100%;
   height: auto;
@@ -237,10 +221,6 @@ body {
   white-space: nowrap;
 }
 
-/* ---------- Block types only CMS posts emit ----------
-   Migrated markdown never produced a figure, a code fence or an <hr>, so these rules
-   exist for lib/cms/blocks.ts output. They sit inside `.article` so both sources still
-   render through one set of prose styles. */
 .article .table-scroll { overflow-x: auto; }
 .article figure { margin-inline: 0; }
 .article figcaption {
@@ -269,7 +249,6 @@ body {
   font-size: 0.9em;
 }
 
-/* Custom scrollbar — single calm blue */
 ::-webkit-scrollbar { width: 11px; height: 11px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {

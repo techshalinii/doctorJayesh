@@ -4,28 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import { invalidateCmsCache } from "@/lib/cms/posts";
 import { CMS_ENABLED, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/config";
 
-/**
- * On-demand revalidation.
- *
- * Without it a published post waits out the 60-second ISR window. With it, Publish
- * Now is live by the time the author switches tabs.
- *
- * Two ways to authorise, and a caller needs only one:
- *
- *   1. **A signed-in admin's own access token.** This is what the dashboard uses.
- *      The token is verified against Supabase, so the browser never has to hold a
- *      deployment secret — there is no shared secret in the client bundle to leak.
- *   2. **`Authorization: Bearer $REVALIDATE_SECRET`.** For callers with no Supabase
- *      session: a deploy hook, an external scheduler, a manual curl.
- *
- * An unauthenticated caller gets 401 and nothing is revalidated. Revalidation is not
- * destructive, but it is a free way to make the origin rebuild pages on demand, so it
- * is not left open.
- */
-
 export const dynamic = "force-dynamic";
 
-/** Length-independent comparison, so a wrong secret leaks nothing by timing. */
 function secretMatches(provided: string, expected: string): boolean {
   if (!expected || provided.length !== expected.length) return false;
   let diff = 0;
@@ -65,15 +45,10 @@ export async function POST(request: Request) {
         .slice(0, 50);
     }
   } catch {
-    // No body is fine — the listing and sitemap are refreshed either way.
   }
 
-  // Drop the in-process memo first. Without this the rebuilt page would render from
-  // the same up-to-60-second-old snapshot and appear not to have changed.
   invalidateCmsCache();
 
-  // `/` is in the list because the homepage's "From the Journal" section renders the
-  // three newest articles from both sources — a new post changes it too.
   const paths = ["/", "/blog", "/sitemap.xml", ...slugs.map((slug) => `/${slug}`)];
   for (const path of paths) revalidatePath(path);
 

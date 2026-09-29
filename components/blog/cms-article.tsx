@@ -9,18 +9,6 @@ import { renderBlocks } from "@/lib/cms/blocks";
 import type { BlogRow } from "@/lib/cms/types";
 import type { PostSummary } from "@/lib/content";
 
-/**
- * Article template for a CMS post.
- *
- * Deliberately mirrors the markup `app/[slug]/page.tsx` renders for a migrated post —
- * same hero, same meta row, same `.article` prose container, same related grid — so a
- * reader cannot tell which source a post came from, and a change to the article design
- * has exactly two places to touch rather than two designs to reconcile.
- *
- * The body arrives as structured blocks and is compiled by `renderBlocks()`, which
- * escapes every value it interpolates. The HTML handed to `dangerouslySetInnerHTML`
- * below therefore contains only tags this codebase emitted.
- */
 export function CmsArticle({ post, related }: { post: BlogRow; related: PostSummary[] }) {
   const html = renderBlocks(post.content);
 

@@ -5,17 +5,6 @@ import { formatInZone } from "@/lib/admin/timezone";
 import type { Block, FaqItem } from "@/lib/cms/types";
 import { Modal } from "@/components/admin/ui";
 
-/**
- * Live preview of the article as it is being written.
- *
- * Rendered with the SAME `renderBlocks()` the public page uses and inside the same
- * `.article` prose styles, so what is shown here is what will ship — a preview built
- * from a second renderer would be a preview of something else.
- *
- * It also shows the Google result the current SEO title and meta description would
- * produce, at the widths Google actually truncates at, which is what makes the numbers
- * in the SEO panel concrete.
- */
 export function PreviewModal({
   onClose,
   title,

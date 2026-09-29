@@ -2,17 +2,6 @@ import type { Metadata } from "next";
 import { AdminAuthProvider } from "@/components/admin/auth-provider";
 import { AdminNav } from "@/components/admin/nav";
 
-/**
- * The CMS dashboard shell.
- *
- * `noindex, nofollow` at the layout level covers every route beneath it, so a new admin
- * page can never be added without the tag. /robots.txt also disallows the prefix; the
- * two are independent defences and neither is load-bearing on its own — the real one is
- * that an anonymous visitor has no session and Row Level Security returns nothing.
- *
- * The public site's navbar, footer and WhatsApp button are suppressed here by
- * <SiteChrome> in the root layout.
- */
 export const metadata: Metadata = {
   title: { absolute: "CMS · Dr. Jayesh Sardhara" },
   robots: { index: false, follow: false, nocache: true },

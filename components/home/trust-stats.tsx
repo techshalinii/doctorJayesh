@@ -1,13 +1,6 @@
 import { Container } from "@/components/ui/container";
 import { trustStats } from "@/lib/data";
 
-/**
- * The four practice figures, as their own band under the three pillars.
- *
- * They used to sit inside <Hero>, which is now a full-bleed image banner with no room
- * for them. Same four entries, same hairline grid — only the parent changed, so nothing
- * was dropped in the move.
- */
 export function TrustStats() {
   return (
     <section className="border-b border-border" aria-label="Practice at a glance">

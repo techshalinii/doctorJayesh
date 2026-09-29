@@ -2,31 +2,6 @@ import { load as parseYaml } from "js-yaml";
 import type { Block, FaqItem } from "@/lib/cms/types";
 import { readTimeFromBlocks, blocksToPlainText } from "@/lib/cms/blocks";
 
-/**
- * Markdown → editor fields.
- *
- * Runs in the browser when the author pastes or drops a `.md` file, so it depends on
- * nothing but `js-yaml` (already a dependency for the migrated content loader).
- *
- * Two metadata carriers are accepted, because both are in use:
- *   1. YAML frontmatter between `---` fences.
- *   2. A leading HTML comment block of `Key: value` lines, which is what the drafts
- *      written for this site actually carry:
- *
- *        <!--
- *        SEO title: Bulging Disc vs Herniated Disc: Causes and Treatment
- *        Meta description: Learn the difference…
- *        Primary query: bulging disc vs herniated disc
- *        -->
- *
- * Frontmatter wins on conflict, being the more explicit of the two.
- *
- * One rule is deliberate and load-bearing: `seo_title` is taken ONLY from an explicit
- * SEO-title line. It is never back-filled from the H1 — a title written for the page
- * and a title written for the search result are different jobs, and silently copying
- * one into the other is how every page ends up with a duplicate.
- */
-
 export interface ImportedPost {
   title: string;
   slug: string;
@@ -44,11 +19,8 @@ export interface ImportedPost {
   read_time: number;
   related_blogs: string[];
   faq: FaqItem[];
-  /** What could not be filled, for the import summary shown to the author. */
   warnings: string[];
 }
-
-/* ── key aliases ────────────────────────────────────────────────────────────── */
 
 const ALIASES: Record<string, string> = {
   title: "title",
@@ -94,8 +66,6 @@ function canonicalKey(raw: string): string | null {
   return ALIASES[raw.trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ")] ?? ALIASES[raw.trim().toLowerCase()] ?? null;
 }
 
-/* ── metadata extraction ────────────────────────────────────────────────────── */
-
 interface Extracted {
   meta: Record<string, unknown>;
   body: string;
@@ -120,7 +90,6 @@ function extractFrontmatter(source: string): Extracted {
   return { meta, body: source.slice(match[0].length) };
 }
 
-/** A LEADING `<!-- Key: value -->` block only — comments further down are content. */
 function extractCommentBlock(source: string): Extracted {
   const match = /^\s*<!--([\s\S]*?)-->\s*/.exec(source);
   if (!match) return { meta: {}, body: source };
@@ -135,13 +104,9 @@ function extractCommentBlock(source: string): Extracted {
     meta[key] = pair[2];
     recognised++;
   }
-  // A comment that held nothing we understand is prose, not metadata — leave it in
-  // the body so the block stripper handles it rather than eating a real note.
   if (recognised === 0) return { meta: {}, body: source };
   return { meta, body: source.slice(match[0].length) };
 }
-
-/* ── value coercion ─────────────────────────────────────────────────────────── */
 
 const asString = (v: unknown): string => (typeof v === "string" ? v.trim() : typeof v === "number" ? String(v) : "");
 
@@ -152,7 +117,6 @@ function asList(v: unknown): string[] {
   return s.split(/[,;]/).map((x) => x.trim()).filter(Boolean);
 }
 
-/** `/bulging-disc/`, `https://site/bulging-disc/` and `bulging-disc` all reduce alike. */
 export function toSlug(value: string): string {
   let s = value.trim();
   const url = /^https?:\/\/[^/]+(\/.*)$/.exec(s);
@@ -166,8 +130,6 @@ export function toSlug(value: string): string {
     .slice(0, 96);
 }
 
-/* ── body → blocks ──────────────────────────────────────────────────────────── */
-
 const TABLE_DIVIDER = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/;
 
 function splitRow(line: string): string[] {
@@ -178,7 +140,6 @@ function splitRow(line: string): string[] {
     .map((c) => c.trim());
 }
 
-/** Blank lines, `---` rules and setext underlines all end a paragraph run. */
 export function markdownToBlocks(markdown: string): Block[] {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const blocks: Block[] = [];
@@ -199,7 +160,6 @@ export function markdownToBlocks(markdown: string): Block[] {
       continue;
     }
 
-    // fenced code
     const fence = /^```+\s*([A-Za-z0-9+#-]*)\s*$/.exec(trimmed);
     if (fence) {
       flush();
@@ -211,7 +171,6 @@ export function markdownToBlocks(markdown: string): Block[] {
       continue;
     }
 
-    // horizontal rule — checked before lists so `***` is not read as emphasis
     if (/^([-*_])\1{2,}$/.test(trimmed.replace(/\s/g, ""))) {
       flush();
       blocks.push({ type: "divider" });
@@ -226,7 +185,6 @@ export function markdownToBlocks(markdown: string): Block[] {
       continue;
     }
 
-    // standalone image
     const image = /^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)$/.exec(trimmed);
     if (image) {
       flush();
@@ -266,7 +224,6 @@ export function markdownToBlocks(markdown: string): Block[] {
       continue;
     }
 
-    // table: a header row followed by a divider row
     if (trimmed.includes("|") && i + 1 < lines.length && TABLE_DIVIDER.test(lines[i + 1])) {
       flush();
       const header = splitRow(trimmed);
@@ -284,12 +241,9 @@ export function markdownToBlocks(markdown: string): Block[] {
   return blocks;
 }
 
-/** `**Heading**` / `__Heading__` used as a heading — keep the words, drop the marks. */
 function stripInlineWrappers(text: string): string {
   return text.replace(/^\s*(\*\*|__)(.+?)\1\s*$/, "$2").trim();
 }
-
-/* ── sections ───────────────────────────────────────────────────────────────── */
 
 interface SectionSplit {
   body: string;
@@ -297,12 +251,6 @@ interface SectionSplit {
   related: string | null;
 }
 
-/**
- * Pull the `## FAQ` and `## Related` sections out of the body.
- *
- * Matched at any heading level and by several spellings, since drafts are written by
- * hand. Everything up to the next heading of the SAME level belongs to the section.
- */
 function splitSections(markdown: string): SectionSplit {
   const lines = markdown.split("\n");
   const body: string[] = [];
@@ -329,7 +277,6 @@ function splitSections(markdown: string): SectionSplit {
         related = [];
         continue;
       }
-      // A heading at or above the section's own level ends it.
       if (current !== "body" && level <= sectionLevel) current = "body";
     }
 
@@ -345,13 +292,6 @@ function splitSections(markdown: string): SectionSplit {
   };
 }
 
-/**
- * FAQ items from a section.
- *
- * Questions are written two ways in practice — as a sub-heading, or as a bold line —
- * and in the bold form the answer usually starts on the NEXT line. Both are handled;
- * everything between one question and the next is the answer.
- */
 export function parseFaqSection(section: string): FaqItem[] {
   const lines = section.replace(/\r\n/g, "\n").split("\n");
   const items: FaqItem[] = [];
@@ -370,10 +310,7 @@ export function parseFaqSection(section: string): FaqItem[] {
     if (!trimmed) continue;
 
     const heading = /^#{1,6}\s+(.*)$/.exec(trimmed);
-    // A bold line is a question when it is the WHOLE line, or when it is followed on
-    // the same line by the answer.
     const bold = /^(?:\*\*|__)(.+?)(?:\*\*|__)\s*:?\s*(.*)$/.exec(trimmed);
-    // "Q: …" / "Q. …"
     const qPrefix = /^Q\s*[.:)]\s*(.+)$/i.exec(trimmed);
 
     if (heading) {
@@ -399,7 +336,6 @@ export function parseFaqSection(section: string): FaqItem[] {
   return items;
 }
 
-/** Slugs from a Related section: list items, links or bare paths. */
 export function parseRelatedSection(section: string): string[] {
   const out: string[] = [];
   for (const line of section.split("\n")) {
@@ -413,9 +349,6 @@ export function parseRelatedSection(section: string): string[] {
   return out;
 }
 
-/* ── the import ─────────────────────────────────────────────────────────────── */
-
-/** Sentence-aware trim to a target length, for a generated excerpt. */
 function firstSentences(text: string, max: number): string {
   if (text.length <= max) return text;
   const cut = text.slice(0, max);
@@ -427,23 +360,18 @@ function firstSentences(text: string, max: number): string {
 export function importMarkdown(source: string): ImportedPost {
   const warnings: string[] = [];
 
-  // Comment block first: it sits above the frontmatter when both are present.
   const fromComment = extractCommentBlock(source);
   const fromFrontmatter = extractFrontmatter(fromComment.body);
   const meta = { ...fromComment.meta, ...fromFrontmatter.meta };
 
-  // Any remaining HTML comments are editorial notes, never content.
   const cleaned = fromFrontmatter.body.replace(/<!--[\s\S]*?-->/g, "");
 
   const sections = splitSections(cleaned);
   const blocks = markdownToBlocks(sections.body);
 
-  // The H1 titles the PAGE. It is used for `title` and nothing else.
   const firstHeading = blocks.find((b) => b.type === "heading" && b.level === 1);
   const title = asString(meta.title) || (firstHeading?.type === "heading" ? firstHeading.text : "");
 
-  // Drop that H1 from the body: every route renders its own <h1>, so keeping it
-  // would produce two — the same rule lib/content.ts applies to migrated posts.
   const content = firstHeading ? blocks.filter((b) => b !== firstHeading) : blocks;
 
   const plain = blocksToPlainText(content);

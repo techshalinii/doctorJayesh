@@ -6,16 +6,6 @@ import type { Session } from "@supabase/supabase-js";
 import { SUPABASE_CONFIGURED, supabaseBrowser } from "@/lib/supabase/client";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/config";
 
-/**
- * Session state for the dashboard, plus the redirect that keeps signed-out visitors
- * out of it.
- *
- * This guard is a convenience, not the security boundary. Row Level Security is — the
- * anon key in this bundle can only ever read posts the public could already see, so
- * defeating the redirect gains an attacker an empty table, not the content. That is
- * why an entirely client-side admin is safe to ship here.
- */
-
 interface AuthState {
   session: Session | null;
   loading: boolean;
@@ -32,9 +22,6 @@ export const useAuth = () => useContext(AuthContext);
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  // Resolved in the initialiser rather than by an effect: with no credentials there is
-  // nothing to wait for, and setting it from inside the effect would be a synchronous
-  // state update during mount.
   const [loading, setLoading] = useState(SUPABASE_CONFIGURED);
   const router = useRouter();
   const pathname = usePathname();
@@ -69,10 +56,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   if (!SUPABASE_CONFIGURED) return <SetupNotice />;
 
-  // The login page renders immediately, without waiting for the session lookup: it is
-  // the same form either way, and holding it back showed "Loading…" to everyone signing
-  // in — including in the server-rendered HTML. If a session does turn up, the effect
-  // above redirects to the dashboard.
   if (loading && !isLoginPage) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted">
@@ -81,7 +64,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Render nothing rather than a flash of the dashboard while the redirect runs.
   if (!session && !isLoginPage) return null;
 
   return (
@@ -89,15 +71,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-/**
- * Shown when the project has no Supabase credentials, instead of a broken login.
- *
- * It reports WHICH value is missing, and covers hosted deployments as well as local
- * development. The first version of this notice talked only about `.env.local` and
- * restarting the dev server, which is no help at all to someone looking at it on a
- * production URL — and it did not say which of the two names had not been found, which
- * is the one fact that actually resolves the problem.
- */
 function SetupNotice() {
   const missing = [
     { name: "NEXT_PUBLIC_SUPABASE_URL", present: Boolean(SUPABASE_URL) },

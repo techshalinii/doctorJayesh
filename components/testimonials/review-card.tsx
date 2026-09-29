@@ -2,19 +2,6 @@ import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GoogleReview } from "@/lib/data";
 
-/**
- * Shared presentation for the Google reviews.
- *
- * The homepage section and /testimonials/ rendered near-identical cards and two byte-for-byte
- * copies of the Google mark; they now draw from here, so the two read as one system. Nothing
- * about the data changed — both still map over `googleReviews` from lib/data.ts.
- *
- * No Review or AggregateRating JSON-LD is emitted for any of this — see
- * components/seo/json-ld.tsx for why self-serving review markup on a Physician entity is a
- * manual-action risk.
- */
-
-/** Google's four-colour mark. Literal brand hexes, deliberately outside the theme scale. */
 export function GoogleG({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
@@ -36,12 +23,6 @@ export function Stars({ n, className }: { n: number; className?: string }) {
   );
 }
 
-/**
- * Google mark + rating + stars + review count, as one centred pill.
- *
- * Both numbers are passed in from `doctor` (rating 5.0, reviews 99) and only formatted —
- * `toFixed(1)` is the same call the previous markup made.
- */
 export function RatingBadge({ rating, count, className }: { rating: number; count: number; className?: string }) {
   return (
     <div
@@ -60,7 +41,6 @@ export function RatingBadge({ rating, count, className }: { rating: number; coun
   );
 }
 
-/** Avatar tints. The reviews carry no photo, so the initial sits on a rotating brand tone. */
 const AVATAR = ["#a63a35", "#8a2f2c", "#cfa451", "#6a2422", "#b5463f", "#9c332e"];
 
 export function ReviewCard({
@@ -75,8 +55,6 @@ export function ReviewCard({
   return (
     <figure
       className={cn(
-        // break-inside-avoid matters only in the column layout on /testimonials/; it is
-        // inert in the homepage grid, so one card serves both.
         "flex break-inside-avoid flex-col rounded-2xl border border-border bg-background p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-navy-200 hover:shadow-soft dark:bg-white/[0.03] dark:hover:border-white/20",
         className,
       )}
@@ -86,7 +64,6 @@ export function ReviewCard({
         <GoogleG className="h-5 w-5 shrink-0" />
       </div>
 
-      {/* Verbatim, unabridged and unclamped — the review text is never truncated. */}
       <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-navy-800/90 dark:text-white/80">
         {review.text}
       </blockquote>

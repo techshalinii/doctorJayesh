@@ -12,7 +12,6 @@ export function AppointmentCTA() {
       <Container>
         <div className="overflow-hidden rounded-2xl border border-border">
           <div className="grid lg:grid-cols-2">
-            {/* left — info on navy */}
             <div className="flex flex-col justify-between gap-10 bg-navy-900 p-6 text-white sm:p-12 dark:bg-navy-950">
               <div>
                 <span className="flex items-center gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-300">
@@ -60,7 +59,6 @@ export function AppointmentCTA() {
               </div>
             </div>
 
-            {/* right — form */}
             <Reveal className="bg-background p-6 sm:p-12">
               <h3 className="font-display text-2xl font-medium text-navy-900 dark:text-white">Request an appointment</h3>
               <p className="mt-1.5 text-sm text-muted">We&apos;ll confirm within a few hours.</p>

@@ -16,18 +16,11 @@ export function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  // Mobile panel: same 0 -> auto height slide the framer version had.
   const menuRef = useRef<HTMLDivElement>(null);
   const menuRendered = usePresence(open, menuRef, { opacity: 0, height: 0 }, { opacity: 1, height: "auto" }, 0.25);
 
-  /**
-   * Freeze the page behind the open panel. Keyed on `open`, not `menuRendered`, so the
-   * lock lifts as the panel starts collapsing rather than after the 0.25s tween — waiting
-   * would leave the page briefly frozen under a panel that is visibly gone.
-   */
   useScrollLock(open);
 
-  /** Esc closes the panel, the same dismissal the gallery lightbox offers. */
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -44,11 +37,6 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /**
-   * Close the mobile panel on navigation. Same behaviour as the effect this replaces, as
-   * derived state during render — an effect that only calls setState runs a second render
-   * pass after paint, which is what react-hooks/set-state-in-effect flags.
-   */
   const [routeAtOpen, setRouteAtOpen] = useState(pathname);
   if (pathname !== routeAtOpen) {
     setRouteAtOpen(pathname);
@@ -132,14 +120,6 @@ export function Navbar() {
             ref={menuRef}
             className="overflow-hidden border-t border-border bg-background lg:hidden"
           >
-            {/* The panel lives inside a `fixed` header, so anything taller than the
-                viewport is simply unreachable — the page behind it scrolls, this does not.
-                Its natural height is ~700px (7 top-level links, 7 sub-links, the CTA), which
-                overflows a 320x568 or 360x640 screen by 140-220px and swallows the
-                "Book Appointment" button. Capping it against the dynamic viewport height
-                and letting it scroll fixes that; `overscroll-contain` stops the scroll
-                chaining to the page behind once the list bottoms out. Mobile-only: the whole
-                panel is `lg:hidden`, so no desktop breakpoint is touched. */}
             <Container className="flex max-h-[calc(100dvh-5rem)] flex-col gap-1 overflow-y-auto overscroll-contain py-4">
               {nav.map((it) => (
                 <div key={it.label}>

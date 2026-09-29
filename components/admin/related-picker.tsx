@@ -3,32 +3,19 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Sparkles, Trash2, X } from "lucide-react";
 import { isVisible } from "@/lib/cms/visibility";
-import type { BlogRow } from "@/lib/cms/types";
+import type { BlogListItem } from "@/lib/admin/api";
 import { AdminButton, Input } from "@/components/admin/ui";
-
-/**
- * "Related in this series" — an ordered list of slugs.
- *
- * Searches BOTH sources: posts written in the CMS and the 180 migrated markdown
- * articles. A new post about disc surgery should be able to point at the migrated
- * article on the same topic; restricting the picker to CMS rows would have made the
- * two halves of the blog invisible to each other.
- *
- * Order is preserved because it is the order they render in.
- */
 
 export interface RelatedCandidate {
   slug: string;
   title: string;
-  /** ISO date used for "latest" ordering. */
   date: string;
   category?: string;
   source: "cms" | "migrated";
-  /** Whether it is currently public. Migrated posts always are. */
   live: boolean;
 }
 
-export function toCandidates(cms: BlogRow[], migrated: RelatedCandidate[]): RelatedCandidate[] {
+export function toCandidates(cms: BlogListItem[], migrated: RelatedCandidate[]): RelatedCandidate[] {
   const fromCms: RelatedCandidate[] = cms.map((p) => ({
     slug: p.slug,
     title: p.title,
@@ -37,7 +24,6 @@ export function toCandidates(cms: BlogRow[], migrated: RelatedCandidate[]): Rela
     source: "cms",
     live: isVisible(p),
   }));
-  // Migrated slugs win a clash, matching lib/cms/public.ts.
   const owned = new Set(migrated.map((m) => m.slug));
   return [...migrated, ...fromCms.filter((c) => !owned.has(c.slug))];
 }
@@ -79,13 +65,6 @@ export function RelatedPicker({
     onChange(next);
   };
 
-  /**
-   * Fill from the chosen category's four most recent posts — published OR scheduled.
-   *
-   * Scheduled ones are included on purpose: by the time this post is read, a post
-   * scheduled for tomorrow is part of the series. They resolve to a live link by then,
-   * and until then the article page simply cannot find them and shows fewer.
-   */
   const autoAdd = () => {
     const latest = candidates
       .filter((c) => c.slug !== currentSlug)
@@ -94,7 +73,6 @@ export function RelatedPicker({
       .slice(0, 4)
       .map((c) => c.slug);
 
-    // Appended, not replaced — the author's own picks keep their position at the top.
     onChange([...value, ...latest.filter((slug) => !value.includes(slug))].slice(0, 8));
   };
 

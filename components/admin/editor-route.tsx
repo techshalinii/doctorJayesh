@@ -8,15 +8,6 @@ import { Banner } from "@/components/admin/ui";
 import { BlogEditor } from "@/components/admin/blog-editor";
 import type { RelatedCandidate } from "@/components/admin/related-picker";
 
-/**
- * Loads the post the editor is about.
- *
- * The fetch happens in the browser rather than on the server because a draft is only
- * readable with the signed-in user's own token — a server render would be anonymous and
- * Row Level Security would correctly return nothing.
- *
- * `/admin/blogs/new/` reaches the same route with id `new` and simply skips the fetch.
- */
 export function EditorRoute({
   id,
   migrated,
@@ -57,14 +48,11 @@ export function EditorRoute({
 
   return (
     <BlogEditor
-      // Remounts when switching between posts, so no state leaks across.
       key={post?.id ?? "new"}
       post={post}
       migrated={migrated}
       reservedSlugs={reservedSlugs}
       defaultAuthor={defaultAuthor}
-      // `?import=1` from the list's "Import Markdown" button opens the importer straight
-      // away instead of making the author find it.
       openImport={searchParams.get("import") === "1"}
     />
   );

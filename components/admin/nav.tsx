@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ExternalLink, FileText, FolderTree, ImageIcon, LayoutDashboard, LogOut } from "lucide-react";
+import { Brain, ExternalLink, FileText, FolderTree, ImageIcon, LayoutDashboard, LogOut, Sparkles } from "lucide-react";
 import { useAuth } from "@/components/admin/auth-provider";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/admin/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/blogs/", label: "Posts", icon: FileText },
+  { href: "/admin/generate/", label: "Generate Blog", icon: Sparkles },
+  { href: "/admin/content-brain/", label: "Content Brain", icon: Brain },
   { href: "/admin/media/", label: "Media", icon: ImageIcon },
   { href: "/admin/categories/", label: "Categories", icon: FolderTree },
 ] as const;
@@ -17,7 +19,6 @@ export function AdminNav() {
   const pathname = usePathname() ?? "";
   const { session, signOut } = useAuth();
 
-  // Hidden on the login page — there is nothing to navigate to yet.
   if (pathname.startsWith("/admin/login")) return null;
 
   return (
@@ -29,7 +30,6 @@ export function AdminNav() {
 
         <nav className="flex flex-1 flex-wrap items-center gap-1">
           {LINKS.map(({ href, label, icon: Icon }) => {
-            // `/admin/` would otherwise match every child route.
             const active = href === "/admin/" ? pathname === href : pathname.startsWith(href);
             return (
               <Link

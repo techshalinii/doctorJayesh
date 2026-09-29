@@ -4,25 +4,6 @@ import path from "node:path";
 import { after, before, describe, it } from "node:test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-/**
- * Acceptance tests 1–7, against a running site.
- *
- *   npm run build && npm start        # in one terminal
- *   npm run test:http                 # in another
- *
- * Environment:
- *   BASE_URL              default http://localhost:3000
- *   TEST_ADMIN_EMAIL      a Supabase user that can write `blogs`
- *   TEST_ADMIN_PASSWORD
- *
- * The suites that need rows in the database seed and remove their own, and SKIP with a
- * printed reason when no admin credentials are supplied — rather than passing silently,
- * which would be worse than not running.
- *
- * The credential-leak suite (test 6) needs neither a server nor a database: it reads the
- * build output directly, so it runs in CI unconditionally.
- */
-
 const BASE = (process.env.BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
@@ -34,7 +15,6 @@ const SKIP_SEED = canSeed
   ? false
   : "needs NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD";
 
-/** ISR window plus a margin, so a revalidated page has certainly been rebuilt. */
 const REVALIDATE_WAIT_MS = 75_000;
 
 interface Fetched {
@@ -43,8 +23,8 @@ interface Fetched {
   redirected: string | null;
 }
 
-async function get(pathname: string): Promise<Fetched> {
-  const response = await fetch(`${BASE}${pathname}`, { redirect: "follow" });
+async function get(pathname: string, init?: RequestInit): Promise<Fetched> {
+  const response = await fetch(`${BASE}${pathname}`, { redirect: "follow", ...init });
   return {
     status: response.status,
     body: await response.text(),
@@ -53,8 +33,6 @@ async function get(pathname: string): Promise<Fetched> {
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/* ── seeding ────────────────────────────────────────────────────────────────── */
 
 const STAMP = Date.now();
 const slugFor = (name: string) => `zz-acceptance-${name}-${STAMP}`;
@@ -76,10 +54,7 @@ async function seed(fields: Record<string, unknown>): Promise<string> {
   return slug;
 }
 
-/* ── 6: no database credential reaches the browser ──────────────────────────── */
-
 describe("no secret is served to the browser (acceptance 6)", () => {
-  /** Files the browser can actually download. `.next/server` is not one of them. */
   function clientFiles(): string[] {
     const roots = [path.join(process.cwd(), ".next", "static")];
     const found: string[] = [];
@@ -104,13 +79,14 @@ describe("no secret is served to the browser (acceptance 6)", () => {
 
   it("ships no service-role key and no REVALIDATE_SECRET", () => {
     const patterns: [string, RegExp][] = [
-      // Supabase's two secret-key shapes: the new `sb_secret_…` and a service_role JWT.
       ["sb_secret_ key", /sb_secret_[A-Za-z0-9_-]{10,}/],
       ["service_role JWT", /"role"\s*:\s*"service_role"/],
       ["service_role JWT (encoded)", /eyJ[A-Za-z0-9_-]*cm9sZSI6InNlcnZpY2Vfcm9sZS/],
       ["SUPABASE_SERVICE_ROLE_KEY reference", /SUPABASE_SERVICE_ROLE_KEY/],
       ["REVALIDATE_SECRET reference", /REVALIDATE_SECRET/],
       ["Anthropic key", /sk-ant-[A-Za-z0-9-]{10,}/],
+      ["Gemini key", /AIza[A-Za-z0-9_-]{30,}/],
+      ["GEMINI_API_KEY read in client code", /process\.env\.GEMINI_API_KEY/],
     ];
 
     const offences: string[] = [];
@@ -135,7 +111,61 @@ describe("no secret is served to the browser (acceptance 6)", () => {
   });
 });
 
-/* ── 5 & 7: the site stands up without the CMS ──────────────────────────────── */
+describe("AI routes require an authenticated admin", () => {
+  const ROUTES = [
+    "/api/admin/ai/generate-blog/",
+    "/api/admin/ai/generate-topics/",
+    "/api/admin/ai/research-topics/",
+    "/api/admin/ai/review-blog/",
+    "/api/admin/ai/monthly-run/",
+    "/api/admin/ai/content-brain/",
+  ];
+
+  for (const route of ROUTES) {
+    it(`refuses an anonymous POST to ${route}`, async (t) => {
+      let response: Fetched;
+      try {
+        response = await get(route, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ topic: "A topic that must never be generated" }),
+        });
+      } catch {
+        t.skip(`no server reachable at ${BASE}`);
+        return;
+      }
+      assert.equal(response.status, 401, `${route} answered ${response.status} without a session`);
+      assert.equal(/contentMarkdown|"blog"\s*:/.test(response.body), false);
+    });
+  }
+
+  it("refuses a forged bearer token", async (t) => {
+    let response: Fetched;
+    try {
+      response = await get("/api/admin/ai/generate-blog/", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: "Bearer not-a-real-token" },
+        body: JSON.stringify({ topic: "A topic that must never be generated" }),
+      });
+    } catch {
+      t.skip(`no server reachable at ${BASE}`);
+      return;
+    }
+    assert.equal(response.status, 401);
+  });
+
+  it("does not leak the provider or model to an anonymous caller", async (t) => {
+    let response: Fetched;
+    try {
+      response = await get("/api/admin/ai/content-brain/");
+    } catch {
+      t.skip(`no server reachable at ${BASE}`);
+      return;
+    }
+    assert.equal(response.status, 401);
+    assert.equal(/gemini|AIza/i.test(response.body), false);
+  });
+});
 
 describe("resilience and routing", () => {
   it("renders the blog listing (acceptance 5: no 500 when the CMS is unavailable)", async (t) => {
@@ -147,7 +177,6 @@ describe("resilience and routing", () => {
       return;
     }
     assert.equal(page.status, 200);
-    // The 180 migrated posts are always there, CMS or no CMS.
     assert.ok(page.body.includes("Insights for brain"), "listing did not render its heading");
     assert.ok(page.body.includes("/bulging-disc-vs-herniated-disc/"), "migrated posts are missing");
   });
@@ -164,14 +193,6 @@ describe("resilience and routing", () => {
     assert.ok(page.body.includes("Bulging Disc"));
   });
 
-  /**
-   * Regression guard for the reserved-slug rule.
-   *
-   * The migration put PAGES at the root too, not just posts, and they are served by the
-   * same `app/[slug]` route. An earlier version of `getReservedSlugs()` only knew about
-   * the posts, so a CMS post could take one of these names — it would have been listed
-   * and put in the sitemap while its URL kept serving the migrated page.
-   */
   it("still serves the migrated root PAGES, not just the posts", async (t) => {
     const pages = ["brain-tumor", "fellowship", "surgeries", "thank-you"];
     let first: Fetched;
@@ -238,8 +259,6 @@ describe("resilience and routing", () => {
   });
 });
 
-/* ── 1, 2, 3, 4: visibility end to end ──────────────────────────────────────── */
-
 describe("published, scheduled and hidden posts", { skip: SKIP_SEED }, () => {
   const draft = slugFor("draft");
   const archived = slugFor("archived");
@@ -261,12 +280,9 @@ describe("published, scheduled and hidden posts", { skip: SKIP_SEED }, () => {
     await seed({ slug: draft, status: "draft" });
     await seed({ slug: archived, status: "archived", publish_at: hourAgo });
     await seed({ slug: future, status: "scheduled", publish_at: hourAhead });
-    // Scheduled, with a time that has ALREADY passed: no cron has touched it and its
-    // status is still "scheduled", yet it must be public. This is acceptance 2.
     await seed({ slug: past, status: "scheduled", publish_at: hourAgo });
     await seed({ slug: live, status: "published", publish_at: hourAgo });
 
-    // Let ISR pick the new rows up.
     await sleep(REVALIDATE_WAIT_MS);
   });
 
@@ -291,7 +307,6 @@ describe("published, scheduled and hidden posts", { skip: SKIP_SEED }, () => {
     const page = await get(`/${past}/`);
     assert.equal(page.status, 200);
 
-    // The row is untouched: still `scheduled`. Only the clock moved.
     const { data } = await db!.from("blogs").select("status").eq("slug", past).single();
     assert.equal((data as { status: string }).status, "scheduled");
 
@@ -323,7 +338,6 @@ describe("published, scheduled and hidden posts", { skip: SKIP_SEED }, () => {
   it("orders the listing newest-first across both sources (acceptance 4)", async () => {
     const listing = await get("/blog/");
 
-    // Every article link on the page, in the order they appear.
     const slugs = [...listing.body.matchAll(/href="\/([a-z0-9-]+)\/"/g)]
       .map((m) => m[1])
       .filter((s) => !["blog", "about", "appointment", "contact-us", "conditions"].includes(s));
@@ -331,7 +345,6 @@ describe("published, scheduled and hidden posts", { skip: SKIP_SEED }, () => {
     const seen = new Set<string>();
     const ordered = slugs.filter((s) => (seen.has(s) ? false : seen.add(s)));
 
-    // The seeded post published an hour ago should sit above a migrated article from 2023.
     const seededIndex = ordered.indexOf(live);
     const oldIndex = ordered.indexOf("bulging-disc-vs-herniated-disc");
     assert.ok(seededIndex >= 0, "the seeded live post is missing from the listing");

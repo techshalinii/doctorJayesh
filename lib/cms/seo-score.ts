@@ -1,33 +1,13 @@
-/**
- * Rule-based SEO scoring for the SEO title and meta description.
- *
- * Deterministic by design: the same input always produces the same score, and every
- * point is attributable to a named rule that carries its own justification. Nothing
- * here guesses, and nothing calls a model — the AI in the Suggest panel only ever
- * proposes WORDING, and whatever it proposes is re-scored by this module before the
- * author is offered it.
- *
- * Pure and dependency-free, so the editor scores on every keystroke and the tests
- * run without a database.
- */
-
 export type ScoreBand = "good" | "needs-work" | "poor";
 
 export interface RuleResult {
   id: string;
-  /** Short name, shown in the checklist. */
   label: string;
-  /** What is actually true of the current value — measured, not adjectival. */
   problem: string;
-  /** The rule and the reason behind it. Shown verbatim in the Suggest panel. */
   why: string;
   points: number;
   max: number;
   passed: boolean;
-  /**
-   * Set when a rule could not be evaluated because no focus keyword was given.
-   * The UI shows a prompt for one rather than pretending the rule failed on merit.
-   */
   needsKeyword?: boolean;
 }
 
@@ -35,20 +15,15 @@ export interface ScoreResult {
   score: number;
   band: ScoreBand;
   length: number;
-  /** The ideal character window, for the counter under the field. */
   ideal: { min: number; max: number };
   rules: RuleResult[];
 }
 
-/** Context the uniqueness and relevance rules need. */
 export interface ScoreContext {
-  /** The post's own H1 / working title. */
   pageTitle: string;
   focusKeyword: string;
   excerpt?: string;
-  /** SEO titles already used by OTHER posts. */
   otherTitles?: readonly string[];
-  /** Meta descriptions already used by OTHER posts. */
   otherDescriptions?: readonly string[];
 }
 
@@ -64,11 +39,9 @@ export const BAND_LABEL: Record<ScoreBand, string> = {
   poor: "Poor",
 };
 
-/* ── shared helpers ─────────────────────────────────────────────────────────── */
+export const normaliseForComparison = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+const norm = normaliseForComparison;
 
-const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
-
-/** Whole-phrase match, so "disc" does not match "discuss". */
 function containsPhrase(haystack: string, phrase: string): boolean {
   const p = norm(phrase);
   if (!p) return false;
@@ -85,17 +58,6 @@ function countPhrase(haystack: string, phrase: string): number {
 
 const SEPARATORS = /[|–—:]|(?:\s-\s)/g;
 
-/**
- * Shouting, as distinct from an acronym.
- *
- * A neurosurgery site legitimately writes MRI, CT, DBS, ACDF, TLIF and ALIF, so a flat
- * "any run of capitals" test would fire on real clinical vocabulary. Two narrower
- * signals instead:
- *
- *   - a word of five or more capitals (URGENT, AMAZING) — longer than any abbreviation
- *     in use here;
- *   - two or more all-caps words in a row (MUST READ), which no acronym produces.
- */
 const LONG_CAPS = /\b[A-Z]{5,}\b/;
 const CONSECUTIVE_CAPS = /\b[A-Z]{2,}\b[^A-Za-z0-9]+\b[A-Z]{2,}\b/;
 
@@ -115,8 +77,6 @@ function contentWords(text: string): string[] {
     .split(/\s+/)
     .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
 }
-
-/* ── vocabulary ─────────────────────────────────────────────────────────────── */
 
 const POWER_WORDS = [
   "proven", "essential", "complete", "ultimate", "expert", "safe", "safer", "fast", "faster",
@@ -142,10 +102,7 @@ const BOILERPLATE = [
   "lorem ipsum",
 ];
 
-/** be-verb followed by a past participle — the usual passive-voice tell. */
 const PASSIVE = /\b(is|are|was|were|be|been|being|can be|will be|has been|have been)\s+\w+(ed|en)\b/i;
-
-/* ── SEO title ──────────────────────────────────────────────────────────────── */
 
 export const TITLE_IDEAL = { min: 50, max: 60 } as const;
 
@@ -155,7 +112,6 @@ export function scoreSeoTitle(value: string, ctx: ScoreContext): ScoreResult {
   const keyword = ctx.focusKeyword.trim();
   const rules: RuleResult[] = [];
 
-  /* 1 — length ------------------------------------------------------------- */
   let lengthPoints = 0;
   if (len >= 50 && len <= 60) lengthPoints = 30;
   else if ((len >= 40 && len <= 49) || (len >= 61 && len <= 65)) lengthPoints = 20;
@@ -177,7 +133,6 @@ export function scoreSeoTitle(value: string, ctx: ScoreContext): ScoreResult {
     passed: lengthPoints === 30,
   });
 
-  /* 2 — keyword present ---------------------------------------------------- */
   const hasKeyword = Boolean(keyword) && containsPhrase(title, keyword);
   rules.push({
     id: "title-keyword",
@@ -196,7 +151,6 @@ export function scoreSeoTitle(value: string, ctx: ScoreContext): ScoreResult {
     ...(keyword ? {} : { needsKeyword: true }),
   });
 
-  /* 3 — keyword position --------------------------------------------------- */
   const keywordAt = keyword ? norm(title).indexOf(norm(keyword)) : -1;
   const early = keywordAt >= 0 && keywordAt < 30;
   rules.push({
@@ -218,7 +172,6 @@ export function scoreSeoTitle(value: string, ctx: ScoreContext): ScoreResult {
     ...(keyword ? {} : { needsKeyword: true }),
   });
 
-  /* 4 — uniqueness --------------------------------------------------------- */
   const clashesWithOther = (ctx.otherTitles ?? []).some((t) => norm(t) === norm(title) && norm(t) !== "");
   const copiesH1 = Boolean(title) && norm(title) === norm(ctx.pageTitle);
   const unique = Boolean(title) && !clashesWithOther && !copiesH1;
@@ -241,7 +194,6 @@ export function scoreSeoTitle(value: string, ctx: ScoreContext): ScoreResult {
     passed: unique,
   });
 
-  /* 5 — number, power word or benefit -------------------------------------- */
   const hasNumber = /\d/.test(title);
   const power = POWER_WORDS.find((w) => containsPhrase(title, w));
   const benefit = BENEFIT_SIGNALS.find((w) => containsPhrase(title, w));
@@ -263,7 +215,6 @@ export function scoreSeoTitle(value: string, ctx: ScoreContext): ScoreResult {
     passed: compelling,
   });
 
-  /* 6 — no stuffing, no shouting, at most one separator --------------------- */
   const keywordCount = keyword ? countPhrase(title, keyword) : 0;
   const stuffed = keywordCount >= 3;
   const shouting = isShouting(title);
@@ -291,8 +242,6 @@ export function scoreSeoTitle(value: string, ctx: ScoreContext): ScoreResult {
   return { score, band: bandOf(score), length: len, ideal: TITLE_IDEAL, rules };
 }
 
-/* ── meta description ───────────────────────────────────────────────────────── */
-
 export const DESCRIPTION_IDEAL = { min: 120, max: 160 } as const;
 
 export function scoreMetaDescription(value: string, ctx: ScoreContext): ScoreResult {
@@ -301,7 +250,6 @@ export function scoreMetaDescription(value: string, ctx: ScoreContext): ScoreRes
   const keyword = ctx.focusKeyword.trim();
   const rules: RuleResult[] = [];
 
-  /* 1 — length ------------------------------------------------------------- */
   let lengthPoints = 0;
   if (len >= 120 && len <= 160) lengthPoints = 30;
   else if ((len >= 70 && len <= 119) || (len >= 161 && len <= 170)) lengthPoints = 15;
@@ -319,7 +267,6 @@ export function scoreMetaDescription(value: string, ctx: ScoreContext): ScoreRes
     passed: lengthPoints === 30,
   });
 
-  /* 2 — keyword present ---------------------------------------------------- */
   const hasKeyword = Boolean(keyword) && containsPhrase(desc, keyword);
   rules.push({
     id: "desc-keyword",
@@ -338,7 +285,6 @@ export function scoreMetaDescription(value: string, ctx: ScoreContext): ScoreRes
     ...(keyword ? {} : { needsKeyword: true }),
   });
 
-  /* 3 — value proposition / call to action --------------------------------- */
   const verb = CTA_VERBS.find((v) => containsPhrase(desc, v));
   const benefit = BENEFIT_SIGNALS.find((b) => containsPhrase(desc, b));
   const hasCta = Boolean(verb) && Boolean(benefit);
@@ -360,7 +306,6 @@ export function scoreMetaDescription(value: string, ctx: ScoreContext): ScoreRes
     passed: hasCta,
   });
 
-  /* 4 — specific and active ------------------------------------------------ */
   const boilerplate = BOILERPLATE.find((b) => containsPhrase(desc, b));
   const passive = PASSIVE.test(desc);
   const titleWords = new Set(contentWords(ctx.pageTitle));
@@ -388,7 +333,6 @@ export function scoreMetaDescription(value: string, ctx: ScoreContext): ScoreRes
     passed: specific,
   });
 
-  /* 5 — uniqueness --------------------------------------------------------- */
   const duplicate = (ctx.otherDescriptions ?? []).some((d) => norm(d) === norm(desc) && norm(d) !== "");
   const unique = Boolean(desc) && !duplicate;
   rules.push({

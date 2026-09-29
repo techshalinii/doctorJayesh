@@ -5,13 +5,6 @@ import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { AdminButton, Banner, Field, Input } from "@/components/admin/ui";
 
-/**
- * Email + password sign-in.
- *
- * Deliberately no sign-up link and no password reset: accounts are created by hand in
- * the Supabase dashboard. This is a two-author site, and a self-service path into the
- * CMS would be the weakest thing about it.
- */
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -28,8 +21,6 @@ export default function LoginPage() {
     setBusy(false);
 
     if (error) {
-      // Supabase already returns a deliberately vague message for bad credentials;
-      // it is passed through rather than made more specific.
       setError(error.message);
       return;
     }

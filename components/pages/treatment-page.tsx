@@ -35,7 +35,6 @@ export function TreatmentPage({ data }: { data: TreatmentData }) {
         </div>
       </Container>
 
-      {/* intro + benefits */}
       <section className="py-16 lg:py-24">
         <Container className="grid gap-14 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-7">
@@ -54,7 +53,6 @@ export function TreatmentPage({ data }: { data: TreatmentData }) {
             </div>
           </div>
 
-          {/* conditions panel */}
           <Reveal delay={0.1} className="lg:col-span-5">
             <div className="border border-navy-900/10 p-8 dark:border-white/10 lg:sticky lg:top-28">
               <span className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-300">
@@ -78,7 +76,6 @@ export function TreatmentPage({ data }: { data: TreatmentData }) {
         </Container>
       </section>
 
-      {/* procedures — index list */}
       <section className="border-y border-border bg-surface/50 py-16 lg:py-24">
         <Container>
           <SectionHeading
@@ -106,7 +103,6 @@ export function TreatmentPage({ data }: { data: TreatmentData }) {
         </Container>
       </section>
 
-      {/* faqs */}
       <section className="py-16 lg:py-24">
         <Container className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
           <SectionHeading index="03" eyebrow="FAQ" title="Questions patients ask" />

@@ -23,8 +23,6 @@ export default function ConditionsPage() {
 
   return (
     <>
-      {/* Template-only route: keeps the generated Physician schema. Migrated pages
-          render <StoredJsonLd /> instead — the two are never merged. */}
       <JsonLd />
       <BreadcrumbJsonLd
         trail={[

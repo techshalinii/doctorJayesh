@@ -48,8 +48,6 @@ export function FloatingWhatsApp() {
       )}
 
       {buttonRendered && (
-        /* whileHover/whileTap became CSS transforms — a hover this small does not need a
-           tween, and the transition is compositor-only either way. */
         <a
           ref={buttonRef}
           href={href}

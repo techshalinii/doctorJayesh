@@ -5,16 +5,6 @@ import { Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { VideoItem } from "@/lib/data";
 
-/**
- * Click-to-play video facade.
- *
- * The live WordPress pages carried up to 15 Elementor video widgets on a single page. Loading
- * that many iframes eagerly is a serious Core Web Vitals cost, so nothing is fetched until the
- * viewer actually clicks: until then this is a poster image and a button.
- *
- * Poster frames come straight from the platform's own thumbnail CDN — a plain <img>, so no
- * `next/image` remote-pattern configuration is needed.
- */
 export function VideoEmbed({ video, className }: { video: VideoItem; className?: string }) {
   const [playing, setPlaying] = useState(false);
   const shorts = video.platform === "youtube-shorts";

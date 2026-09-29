@@ -25,8 +25,6 @@ export default function AppointmentPage() {
 
   return (
     <>
-      {/* Template-only route: keeps the generated Physician schema. Migrated pages
-          render <StoredJsonLd /> instead — the two are never merged. */}
       <JsonLd />
       <BreadcrumbJsonLd
         trail={[
@@ -43,7 +41,6 @@ export default function AppointmentPage() {
 
       <section className="py-14 lg:py-20">
         <Container className="grid gap-14 lg:grid-cols-12 lg:gap-16">
-          {/* form */}
           <Reveal className="order-2 lg:order-1 lg:col-span-7">
             <div className="border border-navy-900/10 p-8 sm:p-10 dark:border-white/10">
               <h2 className="font-display text-2xl font-medium text-navy-900 dark:text-white">Appointment request</h2>
@@ -54,7 +51,6 @@ export default function AppointmentPage() {
             </div>
           </Reveal>
 
-          {/* info */}
           <div className="order-1 lg:order-2 lg:col-span-5">
             <a
               href={`tel:${doctor.phoneRaw}`}
@@ -96,7 +92,6 @@ export default function AppointmentPage() {
           </div>
         </Container>
 
-        {/* how it works */}
         <Container className="mt-24">
           <span className="flex items-center gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-300">
             <span className="h-px w-8 bg-teal-600/50" /> How it works

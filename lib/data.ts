@@ -1,21 +1,5 @@
-/**
- * Central content model for the practice.
- * All copy references Dr. Jayesh Sardhara's real profile; layout & design are original.
- */
-
-/**
- * Confirmed by the client 2026-09-03: 124.
- *
- * The live site contradicted itself — /about/ said 132, the homepage said 124 — so this was
- * held as a visible placeholder until confirmed. The migrated /about/ body copy has been
- * corrected from 132 to 124 to match.
- */
 export const PUBLICATIONS = 124;
 
-/**
- * Confirmed 2026-09-03. The live homepage's "over 1,000 brain tumour surgeries and 1,800
- * spine surgeries" sums to this figure, so the two sources agreed after all.
- */
 export const SURGERIES_TOTAL = "2,800+";
 
 export const doctor = {
@@ -42,18 +26,6 @@ export const doctor = {
   opd: "Mon – Sat · 11:00 AM – 4:00 PM",
 };
 
-/**
- * The doctor's own profiles. Supplied 2026-09-22; until then the footer's icons all
- * pointed at `href="#"`.
- *
- * Declared here rather than in the footer because they have a second consumer: they are
- * the `sameAs` array on the Physician entity in <JsonLd>, which is how a search engine
- * ties these accounts to the practice. Adding a profile in one place updates both.
- *
- * There is no X/Twitter account, so the footer has no X icon — a dead `#` link is worse
- * than an absent one, and an empty `sameAs` entry would be a claim about an account that
- * does not exist.
- */
 export const socialLinks: { label: string; href: string }[] = [
   { label: "LinkedIn", href: "https://in.linkedin.com/in/dr-jayesh-sardhara-235b1a90" },
   { label: "Instagram", href: "https://www.instagram.com/jayeshinsta_/" },
@@ -87,24 +59,12 @@ export const trustStats = [
   { value: "5.0★", label: "Patient Rating" },
 ];
 
-// `recognitions` removed 2026-09-04 with the homepage TrustStrip section: its six labels
-// were a subset of the ten in `awards`, which /news-awards/ and the homepage both render.
-
 export type Expertise = {
   slug: string;
   title: string;
-  icon: string; // lucide icon name
+  icon: string;
   short: string;
-  /** Full description migrated from the live /about/ page. Not present on every entry. */
   long?: string;
-  /**
-   * The heading the live /about/ page used above `long`, where it differs from `title`.
-   *
-   * `title` names the card in our own navigation (homepage Expertise grid), and three of
-   * these four were renamed there to match the treatment pages they link to. That rename
-   * must not reach /about/: the WordPress headings are indexed SEO copy, so the section
-   * that renders the migrated `long` copy renders the migrated heading with it.
-   */
   longTitle?: string;
   href: string;
 };
@@ -209,7 +169,6 @@ export const conditions = {
     title: "Brain Conditions",
     icon: "Brain",
     items: [
-      // `long` copy migrated from the live homepage — see _migration/PAGE-REBUILD.md §1, harvest 2.
       { name: "Brain Tumors", desc: "Gliomas, meningiomas, pituitary & metastatic tumors.",
         long: "A brain tumour is an abnormal growth of cells within the brain. These growths can be benign (non-cancerous) or malignant (cancerous), and they often require specialized neurosurgical care for diagnosis and treatment, which may include surgery, radiation therapy, or chemotherapy." },
       { name: "Stroke", desc: "Ischaemic and haemorrhagic stroke intervention.",
@@ -229,25 +188,12 @@ export const conditions = {
       { name: "Spinal Stenosis", desc: "Decompression for narrowed spinal canals." },
       { name: "Scoliosis", desc: "Correction of spinal curvature and deformity." },
       { name: "Degenerative Disc Disease", desc: "Motion-preserving and fusion options." },
-      // Migrated from the live homepage — this condition had no template entry.
       { name: "Spine Injury", desc: "Trauma to the spinal cord and surrounding structures.",
         long: "Spine injuries can result from accidents or trauma, causing damage to the spinal cord or surrounding structures. These injuries can lead to various degrees of paralysis and sensory loss. Timely evaluation and treatment by a neurosurgeon are essential to optimize recovery and minimize long-term disability." },
     ],
   },
 };
 
-// `Procedure` / `procedures` removed 2026-09-04 with the homepage Procedures section:
-// it duplicated Expertise and pointed at the same two treatment pages. See lib/treatments.ts,
-// which carries the per-page procedure lists that /brain-surgery/ and /spine-surgery/ render.
-
-// The template shipped a `testimonials` array here: four invented patients ("Rajesh M.",
-// "Priya K.", "Anil S.", "Meera D.") with invented procedures and invented recovery
-// statistics ("Discharged in 4 days", "Tremor reduced ~70%"). Deleted 2026-09-04. It was
-// never rendered, but fabricated patient outcomes have no business sitting in a
-// neurosurgeon's repo one careless import away from production. Real patient quotes come
-// from `googleReviews` below, traced to the practice's live Google widget.
-
-// Real Google reviews imported from the practice's live widget.
 export type GoogleReview = { name: string; date: string; rating: number; text: string };
 
 export const googleReviews: GoogleReview[] = [
@@ -314,7 +260,6 @@ export const awards = [
   { year: "2014", title: "Prof. R. K. Sharma Best MCh Resident — Gold Medal", org: "Lucknow", type: "Gold Medal" },
   { year: "Present", title: "Chairman, Young Neurosurgical Forum", org: "NSI, India", type: "Leadership" },
   { year: "Present", title: "Chairman, Innovation & Patent Cell", org: "NSI, India", type: "Leadership" },
-  // Migrated from the live /about/ and homepage — absent from the original template list.
   { year: "2016", title: "Best Oral Paper Presentation (2nd Prize)", org: "World Spine 7, New Delhi", type: "Research Award" },
   { year: "2016", title: "Best Poster Presentation (2nd Prize)", org: "World Spine 7, New Delhi", type: "Research Award" },
   { year: "2016", title: "Traveling Fellowship — 7th Japan-India International Conference", org: "Osaka, Japan", type: "Fellowship" },
@@ -332,12 +277,6 @@ export type Post = {
   featured?: boolean;
 };
 
-// Real articles & featured images sourced from the practice's blog.
-// ⚠️ PARKED — every entry below is excluded from routing, the sitemap and the blog
-// listing. These are hand-written rewrites of migrated WordPress posts that live at
-// different URLs; see the note at the top of lib/blog-content.ts and
-// _migration/EXTRACTION-REPORT.md §5c. The publishable post list comes from
-// content/*.mdx via lib/content.ts, not from here.
 export const posts: Post[] = [
   {
     slug: "deep-brain-stimulation-parkinsons",
@@ -425,11 +364,6 @@ export const posts: Post[] = [
 export const nav = [
   { label: "Home", href: "/" },
   {
-    // Fellowship moved in here 2026-09-04. Adding "Testimonials" as a 9th top-level item
-    // pushed the header bar to ~1097px of content, which overflowed its container between
-    // 1024px (where the desktop nav switches on) and ~1104px. Folding Fellowship under
-    // About removes one item and clears the overlap. Matches the Treatments pattern: the
-    // parent's own href is repeated as the first child so /about/ stays one click away.
     label: "About",
     href: "/about/",
     children: [
@@ -443,24 +377,17 @@ export const nav = [
     children: [
       { label: "Brain Surgery", href: "/brain-surgery/" },
       { label: "Spine Surgery", href: "/spine-surgery/" },
-      // Added 2026-09-04: /conditions/ went live, so it needs a way in.
       { label: "Conditions Treated", href: "/conditions/" },
       { label: "Surgeries", href: "/surgeries/" },
       { label: "Brain Tumour", href: "/brain-tumor/" },
     ],
   },
-  // Added 2026-09-04 alongside /conditions/.
   { label: "Testimonials", href: "/testimonials/" },
   { label: "News & Awards", href: "/news-awards/" },
   { label: "Blog", href: "/blog/" },
   { label: "Contact", href: "/contact-us/" },
 ];
 
-
-/**
- * Press coverage migrated from the live /news-awards/ page â see _migration/PAGE-REBUILD.md Â§6.
- * `image` is the clipping/logo as it appeared on the old site; `href` is the external article.
- */
 export type PressItem = { outlet: string; href: string; image: string };
 
 export const pressCoverage: PressItem[] = [
@@ -481,7 +408,6 @@ export const pressCoverage: PressItem[] = [
   { outlet: "Pharmabiz", href: "https://www.pharmabiz.com/NewsDetails.aspx?aid=182620&sid=2", image: "/wp-content/uploads/2025/11/310340-dissertation-43.webp" },
 ];
 
-/** Long-form news items migrated from the live /news-awards/ page. */
 export type NewsItem = { title: string; image?: string; paragraphs: string[] };
 
 export const newsItems: NewsItem[] = [
@@ -511,15 +437,6 @@ export const newsItems: NewsItem[] = [
   },
 ];
 
-
-/**
- * The Google Maps embed from the live WordPress homepage, preserved exactly.
- *
- * Copied verbatim from _migration/05-crawl/pages/home.json (the z=16 embed; a second,
- * z=15 copy also existed on that page). Only the HTML entity `&#038;` has been decoded
- * back to `&`. Do not regenerate this URL — it encodes the exact place query WordPress
- * used, and a hand-built replacement will not resolve to the same pin.
- */
 export const mapEmbed = {
   src:
     "https://maps.google.com/maps?q=Department%20of%20Neurosurgery%20Fortis%20Hospital%2C%20Mulund%20%20Goregaun-%20Mulund%20link%20road%20%20Mulund%20-%20west%20%28%20400078%29%20&t=m&z=16&output=embed&iwloc=near",
@@ -527,27 +444,6 @@ export const mapEmbed = {
     "Department of Neurosurgery Fortis Hospital, Mulund  Goregaun- Mulund link road  Mulund - west ( 400078) ",
 };
 
-
-/**
- * Videos migrated from the live site's Elementor `video` widgets.
- *
- * Sources come from `_elementor_data` (see _migration/PAGE-REBUILD.md appendix). The live
- * pages held 20 widgets for 13 distinct videos — `Xubuvrwripg` alone appeared five times —
- * so this list is de-duplicated per page.
- *
- * NOT included: `vimeo.com/235215203`, which appeared twice on the live homepage. Its widget
- * was misconfigured (`video_type: "youtube"` with a Vimeo URL) and the video's own title is
- * literally "Vimeo Placeholder" — Elementor demo material, like the pricing tables and Lorem
- * ipsum. It falls under the standing decision that no demo content ships.
- *
- * VISIBILITY: five further home videos exist in the Elementor tree with hide_desktop +
- * hide_tablet + hide_mobile all set, so they do NOT render on the live site and are not
- * listed here (zJ0qKUjbZUo, DbZKg_xBbsc, 2HtWcIghepY, hEFnDTyc1g0, r5rzuL5xZQc). Verified
- * directly against _elementor_data, not inferred. r5rzuL5xZQc IS visible on /brain-surgery/
- * and is kept there.
- *
- * All 9 below were confirmed reachable on 2026-09-03 via the YouTube oEmbed API.
- */
 export type VideoItem = {
   id: string;
   platform: "youtube" | "youtube-shorts" | "vimeo";
@@ -555,15 +451,6 @@ export type VideoItem = {
 };
 
 export const videos: Record<string, VideoItem[]> = {
-  /**
-   * Section 10, the standalone video gallery — three items.
-   *
-   * The homepage carries five videos in total, and the export attaches them to three
-   * different sections: one inside "Why Choose Dr. Jayesh Sardhara?" (section 7), one
-   * inside the Fortis Institute block (section 8), and these three in the gallery. The
-   * two inline ones are `homeInlineVideos` below; all five still render, each where the
-   * live page had it.
-   */
   home: [
     { id: "Xubuvrwripg", platform: "youtube", title: "Surgical technique of full endoscopic uniportal interlaminar discectomy" },
     { id: "LjYxBTmFd8I", platform: "youtube", title: "What is the main cause of brain cancer? Symptoms, types and treatment" },
@@ -584,29 +471,12 @@ export const videos: Record<string, VideoItem[]> = {
   ],
 };
 
-
-/* ── Content migrated from the live WordPress homepage ────────────────────────
- * Verbatim from home-content.json / _elementor_data. Wording is live SEO copy —
- * do not rewrite. Sections flagged visible:false in the export are NOT here.
- */
-
-/**
- * Section 2 — the three icon boxes under the hero.
- *
- * Titles and descriptions are verbatim. `icon` is ours: the export stored Elementor icon
- * class names, not assets, so there was nothing to migrate — these are the nearest
- * equivalents from the set components/ui/icon.tsx already maps.
- */
 export const threePillars = [
   { title: "Diagnose", description: "Examination & Diagnosis", icon: "ScanEye" },
   { title: "Treatment", description: "Treatment of the disease", icon: "Stethoscope" },
   { title: "Care Healthy", description: "Care and recuperation", icon: "HeartPulse" },
 ];
 
-/**
- * The two homepage videos the export attaches to a section rather than to the gallery —
- * sections 7 and 8. Rendered beside that section's copy, as on the live page.
- */
 export const homeInlineVideos: Record<"whyChoose" | "fortis", VideoItem> = {
   whyChoose: {
     id: "jC20REdQTX8",
@@ -620,20 +490,12 @@ export const homeInlineVideos: Record<"whyChoose" | "fortis", VideoItem> = {
   },
 };
 
-/**
- * The introduction video on /about/, above the certificates section.
- *
- * Same YouTube ID as `homeInlineVideos.whyChoose`, declared separately rather than
- * imported from it: the two are independent placements, and pointing /about/ at the
- * homepage's entry would mean swapping the homepage video silently swapped this one too.
- */
 export const aboutVideo: VideoItem = {
   id: "jC20REdQTX8",
   platform: "youtube",
   title: "Witness The Remarkable Journey of Dr. Jayesh Sardhara",
 };
 
-/** Section 7 — "Why Choose Dr. Jayesh Sardhara?" */
 export const whyChooseSardhara = [
   {
     label: "Unparalleled Experience",
@@ -649,7 +511,6 @@ export const whyChooseSardhara = [
   },
 ];
 
-/** Section 5 — award photo gallery. `alt` was empty on WordPress; these are the altSuggested values. */
 export const awardsGallery = [
   { src: "/wp-content/uploads/2026/04/WhatsApp-Image-2026-04-09-at-4.52.03-PM-1.jpeg", alt: "Dr. Jayesh Sardhara receiving a professional award" },
   { src: "/wp-content/uploads/2026/04/WhatsApp-Image-2026-04-09-at-4.52.03-PM.jpeg", alt: "Dr. Jayesh Sardhara at a neurosurgery conference" },
@@ -657,13 +518,6 @@ export const awardsGallery = [
   { src: "/wp-content/uploads/2026/04/WhatsApp-Image-2026-04-09-at-4.52.04-PM-1.jpeg", alt: "Dr. Jayesh Sardhara honoured at a medical event" },
 ];
 
-/**
- * Section 12 — the homepage FAQ accordion.
- *
- * These 7 Q&As are already published as FAQPage JSON-LD in the page's stored schema
- * (content/index.md). Rendering them visibly is required: Google's structured-data policy
- * only allows FAQPage markup for content the user can actually see on the page.
- */
 export const homeFaqs = [
   { q: "What are Neurology and Neurosurgery?", a: "Neurology is the branch of medicine that deals with disorders of the nervous system, while neurosurgery is a surgical speciality focused on treating conditions that require surgical intervention in the nervous system." },
   { q: "When should I see a Neurologist or Neurosurgeon?", a: "You should consider seeing both neurologists and neurosurgeons if you have symptoms related to neurological disorders such as headaches, seizures, or movement problems. Neurosurgeons can also be consulted for surgical interventions like brain or spinal cord surgery." },

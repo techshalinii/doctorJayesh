@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Container } from "@/components/ui/container";
@@ -8,42 +8,66 @@ import { Reveal } from "@/components/ui/reveal";
 import { usePresence } from "@/components/ui/presence";
 import { useScrollLock } from "@/lib/scroll-lock";
 import { awardsGallery } from "@/lib/data";
+import { cn } from "@/lib/utils";
+import { CarouselControls, useSnapCarousel } from "@/components/ui/snap-carousel";
 
-/**
- * The Elementor image carousel of award photographs from the live WordPress homepage
- * (section 5). Rendered as a static responsive grid: same images, no carousel dependency.
- *
- * Renders on `/` — where the live site had it, immediately after the appointment form —
- * and on /news-awards/. It was moved off the homepage in the 2026-09-04 density pass as
- * a third awards touchpoint; restored 2026-09-04 because home-content.json marks it
- * visible and the brief is to reproduce the live page. The images are unchanged.
- *
- * Each tile opens the full 1080x1080 original in a lightbox. That is the only reason this
- * is a client component — the grid itself is static. The overlay is a sibling of the grid
- * rather than a child of a tile on purpose: <Reveal> animates `transform`, and a
- * transformed ancestor makes `position: fixed` resolve against that ancestor instead of
- * the viewport, which would trap the overlay inside a 200px tile.
- */
-export function AwardsGallery({ className }: { className?: string }) {
+export interface GalleryImage {
+  src: string;
+  alt: string;
+  href?: string;
+}
+
+const TILE =
+  "group relative block w-full cursor-pointer overflow-hidden border border-navy-900/10 bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-white/10";
+
+const DEFAULT_HEADING = (
+  <span className="flex items-center gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-300">
+    <span className="h-px w-8 bg-teal-600/50" /> Gallery
+  </span>
+);
+
+export function AwardsGallery({
+  className,
+  images = awardsGallery,
+  heading = DEFAULT_HEADING,
+  ariaLabel = "Award photographs",
+  itemLabel = "Award photograph",
+  layout = "grid",
+  showCaptions = true,
+  tile = "square",
+  autoplay = 0,
+}: {
+  className?: string;
+  images?: readonly GalleryImage[];
+  heading?: ReactNode;
+  ariaLabel?: string;
+  itemLabel?: string;
+  layout?: "grid" | "carousel";
+  showCaptions?: boolean;
+  tile?: "square" | "portrait";
+  autoplay?: number;
+}) {
+  const portrait = tile === "portrait";
+  const tileClass = cn(TILE, portrait ? "aspect-[7/9] rounded-2xl" : "aspect-square");
+  const tileSizes = portrait ? "(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 60vw" : "(min-width: 1024px) 22vw, 45vw";
+  const carousel = layout === "carousel";
   const [openAt, setOpenAt] = useState<number | null>(null);
   const triggers = useRef<Array<HTMLButtonElement | null>>([]);
   const closeRef = useRef<HTMLButtonElement>(null);
   const lastOpened = useRef<number | null>(null);
   const wasOpen = useRef(false);
 
-  const count = awardsGallery.length;
+  const count = images.length;
   const isOpen = openAt !== null;
-  /**
-   * `openAt` goes null the moment the dialog closes, but the element stays mounted for
-   * the fade-out — so the photo to display is tracked separately and simply stops being
-   * updated. Derived during render, not in an effect.
-   */
+  const { track, active, pages, goTo, holdProps } = useSnapCarousel(images.length, {
+    autoplay: carousel ? autoplay : 0,
+    paused: isOpen,
+  });
   const [shownAt, setShownAt] = useState(0);
   if (openAt !== null && openAt !== shownAt) setShownAt(openAt);
-  const current = awardsGallery[shownAt];
+  const current = images[shownAt];
   const dialogRef = useRef<HTMLDivElement>(null);
   const dialogRendered = usePresence(isOpen, dialogRef, { opacity: 0 }, { opacity: 1 }, 0.2);
-  // Shared lock: also stops Lenis, which the previous inline overflow rule did not.
   useScrollLock(isOpen);
 
   const close = useCallback(() => setOpenAt(null), []);
@@ -52,7 +76,6 @@ export function AwardsGallery({ className }: { className?: string }) {
     [count],
   );
 
-  /** Esc to dismiss, arrows to page, and Tab kept inside the dialog while it is up. */
   useEffect(() => {
     if (!isOpen) return;
 
@@ -85,13 +108,6 @@ export function AwardsGallery({ className }: { className?: string }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [isOpen, close, step]);
 
-  /**
-   * Focus into the dialog on open, and back onto the tile that opened it on close.
-   *
-   * Gated on the open/closed transition, not on `openAt` itself: paging with the arrows
-   * changes the index while the dialog stays up, and pulling focus back to the close
-   * button each time would yank it off Next mid-click.
-   */
   useEffect(() => {
     if (openAt !== null) {
       lastOpened.current = openAt;
@@ -107,33 +123,64 @@ export function AwardsGallery({ className }: { className?: string }) {
   }, [openAt]);
 
   return (
-    <section className={className ?? "pb-12 lg:pb-14"} aria-label="Award photographs">
+    <section className={className ?? "pb-12 lg:pb-14"} aria-label={ariaLabel}>
       <Container>
-        <span className="flex items-center gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-300">
-          <span className="h-px w-8 bg-teal-600/50" /> Gallery
-        </span>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-          {awardsGallery.map((img, i) => (
-            <Reveal key={img.src} delay={(i % 4) * 0.05}>
-              <button
-                type="button"
-                ref={(el) => {
-                  triggers.current[i] = el;
-                }}
-                onClick={() => setOpenAt(i)}
-                aria-label={`View larger: ${img.alt}`}
-                className="group relative block aspect-square w-full cursor-pointer overflow-hidden border border-navy-900/10 bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-white/10"
-              >
-                <Image
-                  src={img.src}
-                  alt={img.alt}
-                  fill
-                  sizes="(min-width: 1024px) 22vw, 45vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </button>
+        {heading}
+        <div {...(carousel ? holdProps : {})}>
+        <div
+          ref={carousel ? track : undefined}
+          className={
+            carousel
+              ? "-m-1 flex snap-x snap-mandatory gap-4 overflow-x-auto p-1 [scrollbar-width:none] sm:gap-6 [&::-webkit-scrollbar]:hidden"
+              : "mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4"
+          }
+        >
+          {images.map((img, i) => (
+            <Reveal
+              key={img.src}
+              delay={(i % 4) * 0.05}
+              className={cn(
+                carousel &&
+                  (portrait
+                    ? "shrink-0 snap-start basis-[60%] sm:basis-[calc((100%-3rem)/3)] lg:basis-[calc((100%-4.5rem)/4)]"
+                    : "shrink-0 snap-start basis-[calc((100%-1rem)/2)] sm:basis-[calc((100%-3rem)/3)] lg:basis-[calc((100%-4.5rem)/4)]"),
+              )}
+            >
+              {img.href ? (
+                <a href={img.href} target="_blank" rel="noopener noreferrer" className={tileClass}>
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    fill
+                    sizes={tileSizes}
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  ref={(el) => {
+                    triggers.current[i] = el;
+                  }}
+                  onClick={() => setOpenAt(i)}
+                  aria-label={`View larger: ${img.alt}`}
+                  className={tileClass}
+                >
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    fill
+                    sizes={tileSizes}
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </button>
+              )}
             </Reveal>
           ))}
+        </div>
+        {carousel && (
+          <CarouselControls active={active} pages={pages} onGo={goTo} noun="photograph" />
+        )}
         </div>
       </Container>
 
@@ -142,9 +189,7 @@ export function AwardsGallery({ className }: { className?: string }) {
           ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label={`Award photograph ${(openAt ?? 0) + 1} of ${count}`}
-            /* Only a click that lands on the backdrop itself dismisses — a click on the
-               photograph or a control reports that element as the target, not this one. */
+            aria-label={`${itemLabel} ${(openAt ?? 0) + 1} of ${count}`}
             onClick={(e) => {
               if (e.target === e.currentTarget) close();
             }}
@@ -171,16 +216,6 @@ export function AwardsGallery({ className }: { className?: string }) {
               </button>
             )}
 
-            {/* One `min()` on the width sizes the whole thing, because the box is square:
-                aspect-square derives the height from it, so capping the width at 80vw and
-                at (80vh - caption) caps the height by the same stroke. Expressing it as a
-                max-width plus a max-height instead would let the two clamp independently
-                and the frame would stop being square.
-
-                The 4rem term reserves the caption — mt-3 plus up to two wrapped lines of
-                text-sm — so that the figure as a whole, not just the photograph, stays
-                inside 80vh. 800px is the ceiling on large monitors; the source files are
-                1080px, so there is nothing to gain past that. */}
             <figure className="w-[min(80vw,calc(80vh_-_4rem),800px)]">
               <div className="relative aspect-square w-full">
                 <Image
@@ -191,7 +226,9 @@ export function AwardsGallery({ className }: { className?: string }) {
                   className="object-contain"
                 />
               </div>
-              <figcaption className="mt-3 text-center text-sm font-medium text-black/80">{current.alt}</figcaption>
+              {showCaptions && (
+                <figcaption className="mt-3 text-center text-sm font-medium text-black/80">{current.alt}</figcaption>
+              )}
             </figure>
 
             {count > 1 && (

@@ -33,6 +33,7 @@ function useHeroEntrance() {
 }
 
 
+const BANNER = "/images/hero-banner-spine.jpg";
 const PORTRAIT = "/images/doctor1.png";
 const PORTRAIT_ALT = "Dr. Jayesh Sardhara, Neurosurgeon & Spine Surgeon";
 const PORTRAIT_SIZES = "(min-width: 1280px) 44vw, (min-width: 1024px) 36vw, 92vw";
@@ -44,9 +45,16 @@ export function Hero() {
     <section className="relative isolate overflow-hidden bg-background">
       <div className="relative">
         <div aria-hidden className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-b from-surface via-background to-background" />
-          <div className="absolute -left-32 top-8 h-80 w-80 rounded-full bg-teal-200/30 blur-3xl dark:bg-teal-500/10" />
-          <div className="absolute right-[8%] -top-24 h-[36rem] w-[36rem] rounded-full bg-navy-100/50 blur-3xl dark:bg-navy-800/25" />
+          <Image
+            src={BANNER}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-right opacity-70 dark:opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-background/10 lg:from-background/70 lg:via-background/20 lg:to-transparent dark:from-background dark:via-background/85 dark:to-background/50" />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" />
         </div>
 
         <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
@@ -59,37 +67,17 @@ export function Hero() {
                 fill
                 priority
                 sizes={PORTRAIT_SIZES}
-                className="object-contain object-right-bottom"
+                className="object-contain object-right-top"
               />
             </div>
           </Container>
         </div>
 
         <Container>
-          {/*
-            From md up the banner is one viewport tall, so the badge → heading → tagline →
-            buttons → cards block is what a visitor sees on load and <ThreePillars> and
-            <TrustStats> begin below the fold. `items-center` then centres the column in
-            whatever height that leaves.
-
-            min-h, not h: on a short window (a laptop at 1280×720, or a zoomed-in browser)
-            the content is taller than the viewport, and a fixed height would either clip
-            it or scroll it inside the section. It grows instead — the hero stops being
-            exactly one screen, which is the right trade against losing the CTAs.
-
-            svh rather than vh so a mobile browser's collapsing toolbar cannot make the
-            section overshoot; on desktop the two are identical. The paddings shrink from
-            the old pt-36/pb-24 because that pair alone spent 240px of the viewport.
-          */}
+         
           <div className="relative z-10 grid items-center gap-10 pb-16 pt-28 sm:pt-32 md:min-h-svh md:pb-12 md:pt-28 lg:grid-cols-12 lg:gap-8 lg:pb-16 lg:pt-32">
             <div ref={scope} className="lg:col-span-7">
-              <p
-                data-rise
-                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-700 shadow-soft ring-1 ring-navy-100 dark:bg-white/5 dark:text-teal-300 dark:ring-white/10"
-              >
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-                feel the difference with us
-              </p>
+             
 
               <h1
                 data-rise
@@ -125,10 +113,6 @@ export function Hero() {
               </div>
 
               
-              {/* Only rendered below lg, where the portrait cannot sit in its own column.
-                  In the md band it has to share one viewport with everything above it, so
-                  it gives back the height sm: had handed it — below md nothing is trying
-                  to fit a screen and it keeps its full size. */}
               <div className="relative mt-12 h-[19rem] w-full overflow-hidden rounded-4xl bg-gradient-to-b from-navy-50 to-teal-50 sm:h-[24rem] md:mt-8 md:h-68 lg:hidden dark:from-navy-800 dark:to-navy-950">
                 <Image
                   src={PORTRAIT}

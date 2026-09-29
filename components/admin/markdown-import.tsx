@@ -5,19 +5,6 @@ import { FileUp } from "lucide-react";
 import { importMarkdown, type ImportedPost } from "@/lib/cms/markdown-import";
 import { AdminButton, Banner, Modal, Textarea } from "@/components/admin/ui";
 
-/**
- * Paste or drop a Markdown draft and have every field filled in.
- *
- * The parse itself lives in lib/cms/markdown-import.ts; this is the surface around it.
- * Two things it does on purpose:
- *
- * - It shows a preview of what will be filled BEFORE replacing anything, because import
- *   overwrites the whole form and an accidental one is annoying to undo.
- * - It surfaces the parser's warnings rather than hiding them. The most important is
- *   the missing SEO title: that field is left blank when the draft has no explicit
- *   "SEO title:" line, and the author should know it was left blank deliberately
- *   rather than assume it was filled from the H1.
- */
 export function MarkdownImport({
   open,
   onClose,

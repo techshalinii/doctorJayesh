@@ -2,13 +2,6 @@
 
 import { MediaLibrary } from "@/components/admin/media-picker";
 
-/**
- * Media library.
- *
- * The whole page is <MediaLibrary> with no `onSelect` — the same component the
- * featured-image picker opens in a modal. One implementation of upload, listing and
- * delete rather than two that drift apart.
- */
 export default function MediaPage() {
   return (
     <div className="mx-auto w-full max-w-7xl">

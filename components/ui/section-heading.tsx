@@ -2,7 +2,6 @@ import { cn } from "@/lib/utils";
 import { Reveal } from "./reveal";
 import type { ReactNode } from "react";
 
-/** Editorial overline: a short rule + letterspaced label. No pills. */
 export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <span
@@ -11,7 +10,6 @@ export function Eyebrow({ children, className }: { children: ReactNode; classNam
         className,
       )}
     >
-      <span aria-hidden className="h-px w-7 bg-teal-600/50 dark:bg-teal-400/50" />
       {children}
     </span>
   );
@@ -31,12 +29,6 @@ export function SectionHeading({
   title: ReactNode;
   description?: ReactNode;
   align?: "left" | "center";
-  /**
-   * "split" sets the description beside the title instead of under it, and drops the
-   * title a step down the type scale. Used by the dense homepage sections, where a
-   * stacked heading cost 222px — more than the content beneath it. Same tokens, same
-   * eyebrow, no words removed. Everything else keeps "stacked".
-   */
   layout?: "stacked" | "split";
   className?: string;
 }) {

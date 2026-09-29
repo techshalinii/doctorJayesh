@@ -56,3 +56,23 @@ next-env.d.ts
 # NOTE: public/wp-content/uploads/ IS committed (2,008 files, ~250 MB after in-place
 # recompression). It was previously ignored in favour of R2; that is now opt-in only —
 # the rewrite in next.config.ts stays inert while R2_PUBLIC_BASE is unset.
+
+# test suites (kept locally, not pushed)
+/tests/ai.test.ts
+/tests/corpus.test.ts
+/tests/rate-limit.test.ts
+/tests/sarvam.test.ts
+/tests/http.test.ts
+
+# database migrations (kept locally, not pushed)
+/supabase/migrations/0001_blog_cms.sql
+/supabase/migrations/0002_categories.sql
+/supabase/migrations/0003_ai_generator.sql
+
+# local tooling and OS files
+.claude/
+.vscode/
+.idea/
+*.log
+Thumbs.db
+desktop.ini

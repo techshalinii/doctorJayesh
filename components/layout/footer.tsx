@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Logo } from "@/components/ui/logo";
-import { doctor, locations, nav, mapEmbed, socialLinks } from "@/lib/data";
+import { doctor, locations, nav, socialLinks } from "@/lib/data";
+import { FooterMap } from "./footer-map";
 
 const icons: Record<string, string> = {
   LinkedIn: "M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 8.98h4v12H3v-12zM10 8.98h3.8v1.64h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1v6.31h-4v-5.6c0-1.33-.02-3.05-1.86-3.05-1.86 0-2.15 1.45-2.15 2.95v5.7H10v-12z",
@@ -21,23 +22,7 @@ const services = [
 export function Footer() {
   return (
     <footer className="mt-24 border-t border-border bg-surface">
-      <div className="border-t border-border">
-        <Container className="py-10">
-          <h3 className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-300">
-            Find the Clinic
-          </h3>
-          <div className="mt-5 aspect-[16/9] w-full overflow-hidden border border-navy-900/10 bg-surface-2 sm:aspect-[21/9] dark:border-white/10">
-            <iframe
-              src={mapEmbed.src}
-              title={mapEmbed.title}
-              aria-label={mapEmbed.title}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              className="h-full w-full border-0"
-            />
-          </div>
-        </Container>
-      </div>
+      <FooterMap />
       <Container className="grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-4">
         <div className="lg:col-span-1">
           <Link href="/" className="flex items-center gap-3" aria-label={doctor.name}>

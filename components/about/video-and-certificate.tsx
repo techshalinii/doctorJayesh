@@ -19,8 +19,8 @@ export function AboutVideoAndCertificate() {
 
           <section aria-label="Certificates" className="lg:col-span-5">
             <SectionHeading eyebrow="Certificates" title="Credentials on record" />
-            <Reveal className="mt-10 max-w-[22rem]">
-              <div className="relative aspect-[212/300] overflow-hidden border border-navy-900/10 bg-surface-2 dark:border-white/10">
+            <Reveal className="mx-auto mt-10 max-w-[22rem]">
+              <div className="relative aspect-[212/300] overflow-hidden ">
                 <Image
                   src="/wp-content/uploads/2024/02/DOC-20240220-WA0052_240220_202124.jpg"
                   alt={`Certificate awarded to ${doctor.name}`}

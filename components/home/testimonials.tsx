@@ -13,7 +13,7 @@ export function Testimonials() {
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div>
             <span className="flex items-center gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-300">
-              <span className="font-display normal-case tracking-normal text-navy-900/40 dark:text-white/40">08</span>
+              <span className="font-display normal-case tracking-normal text-navy-900/40 dark:text-white/40">07</span>
               <span className="h-px w-8 bg-teal-600/50" /> Reviews
             </span>
             <h2 className="mt-5 max-w-2xl font-display text-[2rem] font-medium leading-[1.12] tracking-[-0.01em] text-navy-900 sm:text-[2.6rem] dark:text-white">

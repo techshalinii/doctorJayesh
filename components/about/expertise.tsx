@@ -20,18 +20,22 @@ export function AboutExpertise() {
     <section className="py-14 lg:py-18">
       <Container>
         <SectionHeading eyebrow="Expertise" title="Areas of Expertise" />
-        <div className="mt-12 grid gap-x-12 gap-y-10 lg:grid-cols-2">
-          {aboutExpertise.map((e) => (
-            <Reveal key={e.slug}>
-              <div className="flex items-center gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700 dark:bg-white/10 dark:text-teal-300">
-                  <Icon name={e.icon} className="h-5 w-5" />
-                </span>
-                <h3 className="font-display text-xl font-medium text-navy-900 dark:text-white">
-                  {e.longTitle ?? e.title}
-                </h3>
-              </div>
-              <p className="mt-3 leading-relaxed text-muted">{e.long}</p>
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
+          {aboutExpertise.map((e, i) => (
+            <Reveal key={e.slug} delay={(i % 2) * 0.06} className="h-full">
+              <article className="group flex h-full flex-col rounded-3xl bg-white p-7 shadow-card ring-1 ring-navy-100 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-soft hover:ring-navy-200 sm:p-8 dark:bg-white/5 dark:ring-white/10">
+                <div className="flex items-center gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700 transition-colors duration-300 group-hover:bg-navy-900 group-hover:text-white dark:bg-white/10 dark:text-teal-300">
+                    <Icon name={e.icon} className="h-5 w-5" />
+                  </span>
+                  <h3 className="font-display text-xl font-medium leading-snug text-navy-900 dark:text-white">
+                    {e.longTitle ?? e.title}
+                  </h3>
+                </div>
+                <p className="mt-5 pt-5 text-[0.95rem] leading-relaxed text-muted ">
+                  {e.long}
+                </p>
+              </article>
             </Reveal>
           ))}
         </div>

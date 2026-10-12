@@ -5,7 +5,7 @@
 "modified": "2024-04-30 08:26:50"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Parkinson"
 "tags": 
   - "paralysis"
   - "spinal-injury"

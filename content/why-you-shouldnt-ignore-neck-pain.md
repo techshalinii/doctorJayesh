@@ -5,7 +5,7 @@
 "modified": "2025-09-17 21:37:57"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Neck"
 "tags": []
 "author": "jayesh"
 "excerpt": "Why You Shouldn't Ignore Neck Pain! The Common Misconception About Neck Pain Almost every other week, someone comes to me saying, \"Doctor, I think I just slept wrong, it's only neck pain.\" And you know what? Sometimes it is just that — a pillow issue, long hours at a desk, a small strain. But not"

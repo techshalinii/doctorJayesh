@@ -1,8 +1,7 @@
 "use client";
-
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { usePresence } from "@/components/ui/presence";
@@ -10,6 +9,7 @@ import { useScrollLock } from "@/lib/scroll-lock";
 import { awardsGallery } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { CarouselControls, useSnapCarousel } from "@/components/ui/snap-carousel";
+import { Arrow } from "@/components/ui/arrow";
 
 export interface GalleryImage {
   src: string;
@@ -212,7 +212,7 @@ export function AwardsGallery({
                 aria-label="Previous photograph"
                 className="absolute left-2 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-black ring-1 ring-black/10 shadow-sm transition-colors hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 sm:left-6"
               >
-                <ChevronLeft className="h-6 w-6" aria-hidden />
+                <Arrow direction="left" className="h-5 w-5" />
               </button>
             )}
 
@@ -238,7 +238,7 @@ export function AwardsGallery({
                 aria-label="Next photograph"
                 className="absolute right-2 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-black ring-1 ring-black/10 shadow-sm transition-colors hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 sm:right-6"
               >
-                <ChevronRight className="h-6 w-6" aria-hidden />
+                <Arrow className="h-5 w-5" />
               </button>
             )}
         </div>

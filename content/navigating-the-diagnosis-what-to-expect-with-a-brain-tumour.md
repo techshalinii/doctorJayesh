@@ -5,7 +5,7 @@
 "modified": "2025-09-29 23:16:39"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Tumour"
 "tags": []
 "author": "jayesh"
 "excerpt": "In this blog, we will explore the various aspects of a brain tumour diagnosis, including symptoms, the diagnostic process, medical tests, emotional impact, and coping strategies."

@@ -5,7 +5,7 @@
 "modified": "2025-10-06 20:14:33"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Neck"
 "tags": []
 "author": "jayesh"
 "excerpt": "Discover how prolonged poor posture can lead to tech neck and serious spinal issues. Learn preventive measures and when surgical intervention may be necessary."

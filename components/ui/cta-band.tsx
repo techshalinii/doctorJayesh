@@ -1,16 +1,17 @@
-import { ArrowRight, MessageCircle, Phone } from "lucide-react";
+import { MessageCircle, Phone } from "lucide-react";
 import { Container } from "./container";
 import { Button } from "./button";
 import { Reveal } from "./reveal";
 import { doctor } from "@/lib/data";
+import { Arrow } from "@/components/ui/arrow";
 
 export function CtaBand() {
   const wa = `https://wa.me/${doctor.whatsapp}?text=${encodeURIComponent("Hello, I'd like to book a consultation.")}`;
   return (
-    <section className="py-14 lg:py-18">
+    <section className="pt-14 lg:pt-18">
       <Container>
         <Reveal className="overflow-hidden rounded-2xl border-t-2 border-teal-500 bg-navy-900 text-white dark:bg-navy-950">
-          <div className="grid items-center gap-10 p-6 sm:p-14 lg:grid-cols-[1.5fr_1fr]">
+          <div className="grid items-center gap-10 p-7 sm:p-12 lg:grid-cols-[1.5fr_1fr] lg:p-14">
             <div>
               <span className="flex items-center gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-300">
                 <span className="h-px w-8 bg-teal-400/60" /> Appointments
@@ -26,7 +27,7 @@ export function CtaBand() {
 
             <div className="flex flex-col gap-4 lg:border-l lg:border-white/10 lg:pl-10">
               <Button href="/appointment/" variant="gold" size="lg" className="w-full">
-                Book an Appointment <ArrowRight className="h-4 w-4" />
+                Book an Appointment <Arrow />
               </Button>
               <div className="flex flex-col gap-3 text-sm">
                 <a href={`tel:${doctor.phoneRaw}`} className="flex items-center gap-3 text-white/80 transition-colors hover:text-white">

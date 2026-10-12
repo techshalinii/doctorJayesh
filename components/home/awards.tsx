@@ -39,12 +39,12 @@ export function Awards() {
           <div className="border-t border-navy-900/12 dark:border-white/12">
             {awards.slice(0, 4).map((a, i) => (
               <Reveal key={a.title} delay={(i % 6) * 0.05}>
-                <div className="grid grid-cols-1 gap-x-8 gap-y-1 border-b border-navy-900/12 py-6 dark:border-white/12 sm:grid-cols-[5rem_1fr_auto] sm:items-baseline">
-                  <span className="font-display text-lg font-medium tabular-nums text-teal-700/70 dark:text-teal-300/70">
+                <div className="grid grid-cols-1 gap-x-8 gap-y-1 border-b border-navy-900/12 py-6 dark:border-white/12 sm:grid-cols-[5rem_minmax(0,1fr)] sm:items-baseline">
+                  <span className="font-display text-lg font-medium tabular-nums text-teal-700/70 dark:text-teal-300/70 sm:row-span-2">
                     {a.year}
                   </span>
                   <h3 className="font-display text-lg font-medium text-navy-900 dark:text-white">{a.title}</h3>
-                  <p className="mt-1 text-sm text-muted sm:mt-0 sm:whitespace-nowrap sm:text-right">
+                  <p className="text-sm text-muted sm:col-start-2">
                     <span className="uppercase tracking-wider text-teal-700/80 dark:text-teal-300/80">{a.type}</span>
                     <span className="mx-2 text-navy-300 dark:text-white/30">·</span>
                     {a.org}

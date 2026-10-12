@@ -5,7 +5,7 @@
 "modified": "2024-02-15 16:24:56"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Disc"
 "tags": []
 "author": "jayesh"
 "excerpt": "In this blog, we’ll break down the key disparities between a bulging disc and a herniated disc, making it easy for you to understand."

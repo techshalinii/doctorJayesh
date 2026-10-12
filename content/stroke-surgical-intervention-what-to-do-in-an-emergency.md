@@ -5,7 +5,7 @@
 "modified": "2025-07-21 13:36:11"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Stroke"
 "tags": 
   - "paralysis"
   - "spinal-injury"

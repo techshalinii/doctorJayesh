@@ -5,7 +5,7 @@
 "modified": "2024-04-24 12:04:28"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Genetic"
 "tags": 
   - "paralysis"
   - "spinal-injury"

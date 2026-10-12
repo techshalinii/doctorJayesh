@@ -5,7 +5,7 @@
 "modified": "2025-10-06 20:13:14"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Stroke"
 "tags": []
 "author": "jayesh"
 "excerpt": "Learn to identify stroke symptoms like facial drooping and collapse using the FAST test. Understand how timely clot-removal surgery can restore brain function."

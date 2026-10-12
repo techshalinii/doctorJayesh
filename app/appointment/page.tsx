@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { BreadcrumbJsonLd, JsonLd } from "@/components/seo/json-ld";
-import { ArrowUpRight, CalendarCheck, Clock, MapPin, MessageCircle, Phone, ShieldCheck } from "lucide-react";
+import { CalendarCheck, Clock, MapPin, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { PageHero } from "@/components/ui/page-hero";
 import { Reveal } from "@/components/ui/reveal";
 import { Eyebrow } from "@/components/ui/section-heading";
 import { AppointmentForm } from "@/components/forms/appointment-form";
 import { doctor, locations, trustStats } from "@/lib/data";
+import { Arrow } from "@/components/ui/arrow";
 
 export const metadata: Metadata = pageMetadata({
   path: "/appointment",
@@ -78,10 +79,7 @@ export default function AppointmentPage() {
                 <span className="block text-xs uppercase tracking-wider text-white/60">Emergency / Direct line</span>
                 <span className="mt-0.5 block font-display text-2xl font-medium">{doctor.phone}</span>
               </span>
-              <ArrowUpRight
-                aria-hidden
-                className="h-5 w-5 shrink-0 text-white/50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-              />
+              <Arrow className="text-white/50" />
             </a>
 
             <div className={`${card} divide-y divide-navy-900/10 px-5 dark:divide-white/10`}>
@@ -95,7 +93,7 @@ export default function AppointmentPage() {
                   <MessageCircle className="h-5 w-5" aria-hidden />
                 </span>
                 <span className="flex-1">Message on WhatsApp</span>
-                <ArrowUpRight aria-hidden className="h-4 w-4 text-muted transition-colors group-hover:text-teal-700" />
+                <Arrow className="text-muted group-hover:text-teal-700" />
               </a>
               <div className="flex items-center gap-4 py-4">
                 <span className={badge}>
@@ -117,6 +115,7 @@ export default function AppointmentPage() {
                   <div>
                     <p className="font-medium text-navy-900 dark:text-white">{l.name}</p>
                     <p className="text-sm text-muted">{l.address}</p>
+                    {l.hours && <p className="mt-1 text-sm font-medium text-teal-700 dark:text-teal-300">{l.hours}</p>}
                   </div>
                 </div>
               ))}

@@ -5,7 +5,7 @@
 "modified": "2026-06-26 14:46:15"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Parkinson"
 "tags": []
 "author": "jayesh"
 "excerpt": "One of the first questions families ask after a stroke is simple, but very heavy: \"Doctor, will he move again? Will she ever walk?"

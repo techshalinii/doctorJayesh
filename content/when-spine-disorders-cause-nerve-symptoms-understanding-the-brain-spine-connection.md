@@ -5,7 +5,7 @@
 "modified": "2026-03-06 15:13:40"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Spine"
 "tags": []
 "author": "jayesh"
 "excerpt": "When Spine Disorders Cause Nerve Symptoms: Understanding the Brain–Spine Connection Comprehensive Guide to Spine Surgery and Nerve Recovery Spine conditions can impact movement, sensation, strength, and overall quality of life. Many patients experience numbness, weakness, tingling, or even bladder and bowel issues due to spinal nerve compression. Identifying symptoms early and consulting a spine surgeon"

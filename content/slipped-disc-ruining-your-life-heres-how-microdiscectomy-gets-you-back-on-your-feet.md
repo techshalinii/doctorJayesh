@@ -5,7 +5,7 @@
 "modified": "2025-10-06 20:17:32"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Disc"
 "tags": []
 "author": "jayesh"
 "excerpt": "Suffering from a slipped disc? Discover how microdiscectomy surgery offers rapid pain relief and restores mobility, allowing you to return to daily activities."

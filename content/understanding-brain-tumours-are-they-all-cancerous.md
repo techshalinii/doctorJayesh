@@ -5,7 +5,7 @@
 "modified": "2025-09-17 23:17:34"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Tumour"
 "tags": 
   - "paralysis"
   - "spinal-injury"

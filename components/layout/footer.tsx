@@ -92,6 +92,12 @@ export function Footer() {
                   <span className="font-medium text-navy-800 dark:text-white/90">{l.name}</span>
                   <br />
                   {l.address}
+                  {l.hours && (
+                    <>
+                      <br />
+                      <span className="text-teal-700 dark:text-teal-300">{l.hours}</span>
+                    </>
+                  )}
                 </span>
               </li>
             ))}

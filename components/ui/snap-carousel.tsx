@@ -1,8 +1,8 @@
 "use client";
-
 import { useCallback, useEffect, useRef, useState, type FocusEvent } from "react";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Arrow } from "@/components/ui/arrow";
 
 export function useSnapCarousel(
   count: number,
@@ -126,7 +126,7 @@ export function CarouselControls({
         aria-label={`Previous ${noun}`}
         className={pill}
       >
-        <ChevronLeft className="h-4 w-4" aria-hidden />
+        <Arrow direction="left" />
       </button>
 
       <div className="flex items-center gap-2">
@@ -152,7 +152,7 @@ export function CarouselControls({
         aria-label={`Next ${noun}`}
         className={pill}
       >
-        <ChevronRight className="h-4 w-4" aria-hidden />
+        <Arrow />
       </button>
 
       {autoplay && (

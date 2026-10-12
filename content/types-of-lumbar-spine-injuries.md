@@ -5,7 +5,7 @@
 "modified": "2024-03-04 18:22:07"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Back"
 "tags": 
   - "lower-back-pain"
   - "lumbar-spine-injury"

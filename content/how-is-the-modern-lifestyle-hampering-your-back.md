@@ -5,7 +5,7 @@
 "modified": "2024-04-30 08:20:27"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Back"
 "tags": []
 "author": "jayesh"
 "excerpt": "In the hustle and bustle of the modern era, where technological advancements and convenience often take centre stage, our sedentary and tech-driven lifestyles are leaving an indelible mark on our health. One area that bears the brunt of this shift is our backs. From prolonged hours spent hunched over screens to the lack of physical"

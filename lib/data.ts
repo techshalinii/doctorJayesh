@@ -19,9 +19,9 @@ export const doctor = {
   books: 2,
   rating: 5.0,
   reviews: 99,
-  phone: "+91 98928 05422",
-  phoneRaw: "+919892805422",
-  whatsapp: "919892805422",
+  phone: "+91 91379 96799",
+  phoneRaw: "+919137996799",
+  whatsapp: "919137996799",
   email: "jayeshsardhara83@gmail.com",
   opd: "Mon – Sat · 11:00 AM – 4:00 PM",
 };
@@ -32,16 +32,24 @@ export const socialLinks: { label: string; href: string }[] = [
   { label: "YouTube", href: "https://www.youtube.com/@dr.jayeshsardhara341" },
 ];
 
-export const locations = [
+export type ClinicLocation = {
+  name: string;
+  address: string;
+  kind: string;
+  hours?: string;
+};
+
+export const locations: ClinicLocation[] = [
   {
     name: "Fortis Hospital, Mulund",
     address: "Mulund Goregaon Link Road, Mulund West, Mumbai 400078",
     kind: "Primary Surgical Centre",
   },
   {
-    name: "O & S Business Suite",
-    address: "Ghatkopar West, Mumbai",
+    name: "Om Polyclinic",
+    address: "17, Tridev Shopping Complex, Bhakti Marg, Mulund West, Mumbai",
     kind: "Consultation Clinic",
+    hours: "7:30 pm to 9:00 pm, daily except Sunday",
   },
 ];
 

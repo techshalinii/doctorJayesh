@@ -5,7 +5,7 @@
 "modified": "2025-07-17 15:27:46"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Epilepsy"
 "tags": 
   - "paralysis"
   - "spinal-injury"

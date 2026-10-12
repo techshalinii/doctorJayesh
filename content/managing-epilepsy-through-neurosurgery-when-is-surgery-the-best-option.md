@@ -5,7 +5,7 @@
 "modified": "2025-11-10 23:34:56"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Epilepsy"
 "tags": []
 "author": "jayesh"
 "excerpt": "One of the first questions families ask after a stroke is simple, but very heavy: \"Doctor, will he move again? Will she ever walk?"

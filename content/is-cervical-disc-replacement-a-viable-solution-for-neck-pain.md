@@ -5,7 +5,7 @@
 "modified": "2024-02-15 16:53:34"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Neck"
 "tags": []
 "author": "jayesh"
 "excerpt": "In this blog, we’ll explore the intricacies of Cervical Disc Replacement, weigh its pros and cons, and help you navigate this critical decision."

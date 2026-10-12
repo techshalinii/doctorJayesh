@@ -82,6 +82,7 @@ export default function ContactPage() {
                     <span className="text-xs uppercase tracking-wider text-teal-700 dark:text-teal-300">{l.kind}</span>
                     <h3 className="mt-0.5 font-medium text-navy-900 dark:text-white">{l.name}</h3>
                     <p className="mt-1 text-sm text-muted">{l.address}</p>
+                    {l.hours && <p className="mt-1 text-sm font-medium text-teal-700 dark:text-teal-300">{l.hours}</p>}
                   </div>
                 </div>
               ))}

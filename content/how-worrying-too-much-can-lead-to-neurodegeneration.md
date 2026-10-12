@@ -5,7 +5,7 @@
 "modified": "2024-04-22 12:31:38"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Brain"
 "tags": 
   - "paralysis"
   - "spinal-injury"

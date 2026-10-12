@@ -5,7 +5,7 @@
 "modified": "2024-03-04 18:24:38"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Stroke"
 "tags": 
   - "brain-attack"
   - "stroke"

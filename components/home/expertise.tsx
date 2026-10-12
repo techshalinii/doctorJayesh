@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
 import { CardImage } from "@/components/ui/card-image";
 import { expertise } from "@/lib/data";
+import { Arrow } from "@/components/ui/arrow";
 
 const PHOTOS = [
   { src: "/images/expertise/brain-tumor-surgery.jpg", alt: "Neurosurgeon planning brain tumor surgery using neuro-navigation" },
@@ -56,10 +56,7 @@ export function Expertise() {
 
                   <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-navy-800 dark:text-white/80">
                     Learn more
-                    <ArrowRight
-                      aria-hidden
-                      className="h-4 w-4 text-teal-600 transition-transform duration-300 group-hover:translate-x-1 group-focus-visible:translate-x-1 dark:text-teal-400"
-                    />
+                    <Arrow className="text-teal-600 dark:text-teal-400" />
                   </span>
                 </Link>
               </Reveal>

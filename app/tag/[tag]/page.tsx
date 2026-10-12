@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { PageHero } from "@/components/ui/page-hero";
 import { CtaBand } from "@/components/ui/cta-band";
@@ -14,6 +13,7 @@ import {
   metadataFromDoc,
   toPostSummary,
 } from "@/lib/content";
+import { Arrow } from "@/components/ui/arrow";
 
 export const dynamicParams = false;
 
@@ -74,7 +74,7 @@ export default async function TagArchive({ params }: { params: Promise<{ tag: st
                     </h2>
                     <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">{p.excerpt}</p>
                     <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-navy-800 dark:text-white/80">
-                      Read <ArrowUpRight className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                      Read <Arrow className="text-teal-600 dark:text-teal-400" />
                     </span>
                   </div>
                 </Link>

@@ -5,7 +5,7 @@
 "modified": "2024-02-15 16:02:24"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Disc"
 "tags": []
 "author": "jayesh"
 "excerpt": "In this blog, we’ll explore what artificial discs in spine surgery are and the numerous benefits they offer to those seeking a path to pain-free living."

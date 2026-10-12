@@ -5,7 +5,7 @@
 "modified": "2024-02-15 17:32:38"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Parkinson"
 "tags": []
 "author": "jayesh"
 "excerpt": "This blog will explore the various lifestyle changes that can help manage Parkinson's symptoms. Read blog for more info."

@@ -5,7 +5,7 @@
 "modified": "2023-12-09 08:04:53"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Tumour"
 "tags": []
 "author": "jayesh"
 "excerpt": "Every year 8th of June is observed as World Brain Tumor Day. On this occasion, expert shares about the connection between fatigue and tumour. Brain tumour: Abnormal growth or mass of cells in or around the brain is known as Brain Tumour. Some tumours can grow quickly, or some might take a long time to grow."

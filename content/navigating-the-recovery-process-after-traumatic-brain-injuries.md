@@ -5,7 +5,7 @@
 "modified": "2024-03-04 18:32:39"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Rehab"
 "tags": []
 "author": "jayesh"
 "excerpt": "Traumatic Brain Injuries (TBIs) are a complex and often life-altering consequence of accidents, falls, or other traumatic incidents. These injuries not only impact physical health but can also have profound effects on cognitive function and emotional well-being. Overcoming the challenges posed by TBIs requires a multifaceted approach that encompasses medical intervention, rehabilitation, emotional support, and"

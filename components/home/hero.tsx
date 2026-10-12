@@ -1,8 +1,7 @@
 "use client";
-
 import Image from "next/image";
 import { useRef } from "react";
-import { ArrowRight, ArrowUpRight, Clock, ShieldCheck, Stethoscope } from "lucide-react";
+import { Clock, ShieldCheck, Stethoscope } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Magnetic } from "@/components/ui/magnetic";
@@ -10,6 +9,7 @@ import { doctor, SURGERIES_TOTAL } from "@/lib/data";
 import { gsap, prefersReducedMotion, useIsomorphicLayoutEffect } from "@/lib/gsap";
 import { ThreePillars } from "./three-pillars";
 import { TrustStats } from "./trust-stats";
+import { Arrow } from "@/components/ui/arrow";
 
 function useHeroEntrance() {
   const scope = useRef<HTMLDivElement>(null);
@@ -102,12 +102,12 @@ export function Hero() {
               
                 <Magnetic>
                   <Button href="#book_now" size="lg">
-                    Book An Appointment <ArrowRight className="h-4 w-4" />
+                    Book An Appointment <Arrow />
                   </Button>
                 </Magnetic>
                 <Magnetic>
                   <Button href="#whychooseus" size="lg">
-                    Why Choose Us <ArrowUpRight className="h-4 w-4" />
+                    Why Choose Us <Arrow />
                   </Button>
                 </Magnetic>
               </div>

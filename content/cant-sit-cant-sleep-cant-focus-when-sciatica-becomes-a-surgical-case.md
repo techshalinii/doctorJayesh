@@ -5,7 +5,7 @@
 "modified": "2025-10-06 20:15:38"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Back"
 "tags": []
 "author": "jayesh"
 "excerpt": "Struggling with sciatica that disrupts daily life? Learn when conservative treatments fail and surgery becomes a viable option for lasting relief."

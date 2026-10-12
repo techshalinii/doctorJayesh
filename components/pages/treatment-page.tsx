@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { PageHero } from "@/components/ui/page-hero";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -11,13 +10,14 @@ import { Faq } from "@/components/ui/faq";
 import type { TreatmentData } from "@/lib/treatments";
 import { VideoEmbed } from "@/components/ui/video-embed";
 import { videos } from "@/lib/data";
+import { Arrow } from "@/components/ui/arrow";
 
 export function TreatmentPage({ data }: { data: TreatmentData }) {
   return (
     <>
       <PageHero eyebrow={data.eyebrow} breadcrumb={data.eyebrow} title={data.title} description={data.description}>
         <div className="flex flex-wrap gap-4">
-          <Button href="/appointment/">Book a Consultation <ArrowRight className="h-4 w-4" /></Button>
+          <Button href="/appointment/">Book a Consultation <Arrow /></Button>
           <Button href="/conditions/" variant="secondary">Conditions We Treat</Button>
         </div>
       </PageHero>
@@ -83,20 +83,20 @@ export function TreatmentPage({ data }: { data: TreatmentData }) {
             eyebrow="Procedures"
             title="Procedures we perform"
             description={`A full range of ${data.eyebrow.toLowerCase()} procedures, tailored to your diagnosis.`}
+            layout="split"
           />
-          <div className="mt-14 border-t border-navy-900/12 dark:border-white/12">
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {data.procedures.map((p, i) => (
-              <Reveal key={p.name} delay={(i % 6) * 0.04}>
-                <div className="grid grid-cols-1 items-baseline gap-x-8 gap-y-2 border-b border-navy-900/12 py-7 dark:border-white/12 sm:grid-cols-[3rem_1fr_auto]">
-                  <span className="font-display text-lg font-medium tabular-nums text-teal-700/60 dark:text-teal-300/60">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <h3 className="font-display text-xl font-medium text-navy-900 dark:text-white">{p.name}</h3>
-                    <p className="mt-1.5 max-w-xl text-sm text-muted">{p.desc}</p>
+              <Reveal key={p.name} delay={(i % 3) * 0.05} className="h-full">
+                <article className="group flex h-full flex-col bg-white p-7 shadow-card ring-1 ring-navy-100 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-soft hover:ring-navy-200 dark:bg-white/5 dark:ring-white/10">
+                  <div className="flex items-baseline gap-3">
+                    <span className="font-display text-lg font-medium tabular-nums text-teal-700/50 transition-colors duration-300 group-hover:text-navy-900 dark:text-teal-300/50 dark:group-hover:text-teal-200">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <h3 className="font-display text-xl font-medium leading-snug text-navy-900 dark:text-white">{p.name}</h3>
                   </div>
-                  <Icon name={p.icon} className="hidden h-6 w-6 text-navy-300 dark:text-white/30 sm:block" />
-                </div>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{p.desc}</p>
+                </article>
               </Reveal>
             ))}
           </div>

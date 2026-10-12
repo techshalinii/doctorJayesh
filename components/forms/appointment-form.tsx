@@ -1,11 +1,11 @@
 "use client";
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { ButtonAction } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { doctor } from "@/lib/data";
+import { Arrow } from "@/components/ui/arrow";
 
 const services = [
   "Brain Tumor Surgery",
@@ -247,7 +247,7 @@ export function AppointmentForm({ variant = "default" }: { variant?: Variant } =
             {isSubmitting ? (
               <><Loader2 className="h-5 w-5 animate-spin" /> Sending…</>
             ) : compact ? (
-              <>Request Appointment <ArrowRight className="h-5 w-5" aria-hidden /></>
+              <>Request Appointment <Arrow /></>
             ) : (
               "Request Appointment"
             )}

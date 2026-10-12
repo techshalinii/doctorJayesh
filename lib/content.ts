@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { load as parseYaml } from "js-yaml";
+import { toBlogCategory } from "@/lib/blog-categories";
 import { marked } from "marked";
 import { OG_IMAGE } from "@/lib/seo";
 import type { Metadata } from "next";
@@ -41,6 +42,8 @@ export const STATIC_ROUTE_SLUGS: ReadonlySet<string> = new Set([
   "spine-surgery",
   "news-awards",
   "fellowship",
+  "surgeries",
+  "brain-tumor",
 ]);
 
 function readAll(): ContentDoc[] {
@@ -293,9 +296,11 @@ function readingTime(body: string): string {
 }
 
 export function toPostSummary(doc: ContentDoc): PostSummary {
+  const category = doc.categories.map(toBlogCategory).find(Boolean);
   return {
     slug: doc.fileSlug,
     title: doc.title,
+    ...(category ? { category } : {}),
     excerpt: doc.excerpt,
     readingTime: readingTime(doc.body),
     date: doc.date ?? "",

@@ -5,7 +5,7 @@
 "modified": "2025-09-17 21:33:52"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Tumour"
 "tags": []
 "author": "jayesh"
 "excerpt": "Brain Tumors and Mood Swings: The Surprising Connection The Hidden Warning Signs When people hear \"brain tumor,\" they usually think of headaches. Or sometimes seizures. That's it. But honestly, when families walk into my clinic, the first thing they say is something completely different. They say, \"Doctor, he's just not himself anymore.\" Or, \"She snaps"

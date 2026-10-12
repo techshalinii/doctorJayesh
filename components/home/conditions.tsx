@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
 import { CardImage } from "@/components/ui/card-image";
+import { Arrow } from "@/components/ui/arrow";
 
 const CARDS = [
   {
@@ -73,7 +73,7 @@ export function Conditions() {
 
                 <span className={LEARN_MORE}>
                   Learn more
-                  <ArrowRight className="h-4 w-4" aria-hidden />
+                  <Arrow />
                 </span>
               </Link>
             </Reveal>
@@ -85,7 +85,7 @@ export function Conditions() {
           className="group mt-12 inline-flex items-center gap-2 text-sm font-medium text-navy-800 dark:text-white/80"
         >
           All conditions we treat
-          <ArrowRight className="h-4 w-4 text-teal-600 transition-transform group-hover:translate-x-1 dark:text-teal-400" />
+          <Arrow className="text-teal-600 dark:text-teal-400" />
         </Link>
       </Container>
     </section>

@@ -5,7 +5,7 @@
 "modified": "2024-03-04 18:28:41"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Spine"
 "tags": []
 "author": "jayesh"
 "excerpt": "Recovering from a spinal fracture is a significant hurdle, affecting not just the body but overall well-being. Whether resulting from an accident or health issues, bouncing back from a spinal fracture requires a thorough and personalized plan. In this blog, we'll delve into five crucial tips to aid spinal fracture recovery. These tips cover everything,"

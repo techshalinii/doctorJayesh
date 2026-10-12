@@ -5,7 +5,7 @@
 "modified": "2024-03-04 18:46:25"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Spine"
 "tags": []
 "author": "jayesh"
 "excerpt": "The most common cause of spinal cord compression is due to wear and tear which occurs gradually."

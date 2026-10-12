@@ -5,7 +5,7 @@
 "modified": "2024-02-15 17:16:43"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Epilepsy"
 "tags": []
 "author": "jayesh"
 "excerpt": "In this blog, we will explore the intricate relationship between epilepsy and lifestyle choices, focusing on the impact of diet and sleep."

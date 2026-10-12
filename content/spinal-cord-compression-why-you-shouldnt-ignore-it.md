@@ -5,7 +5,7 @@
 "modified": "2025-09-17 21:30:14"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Spine"
 "tags": []
 "author": "jayesh"
 "excerpt": "Spinal Cord Compression: Why You Shouldn't Ignore It The Common Misconception About Back Pain Almost every week I see patients who come in with back pain. And you know what most of them say? \"Doctor, it's just age. Everyone after 40 has back pain, right?\" Yes, back pain is common. Very common. Sometimes it's really"

@@ -5,7 +5,7 @@
 "modified": "2025-11-11 23:12:37"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Surgery"
 "tags": []
 "author": "jayesh"
 "excerpt": "One of the first questions families ask after a stroke is simple, but very heavy: \"Doctor, will he move again? Will she ever walk?"

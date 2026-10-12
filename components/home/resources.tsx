@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { PostsExplorer } from "@/components/blog/posts-explorer";
 import { getMergedPostSummaries } from "@/lib/cms/public";
+import { Arrow } from "@/components/ui/arrow";
 
 export async function Resources() {
   const posts = await getMergedPostSummaries();
@@ -22,7 +22,7 @@ export async function Resources() {
             className="group inline-flex shrink-0 items-center gap-2 text-sm font-medium text-navy-800 dark:text-white/80"
           >
             View all articles
-            <ArrowRight className="h-4 w-4 text-teal-600 transition-transform group-hover:translate-x-1 dark:text-teal-400" />
+            <Arrow className="text-teal-600 dark:text-teal-400" />
           </Link>
         </div>
 

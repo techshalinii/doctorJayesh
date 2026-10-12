@@ -3,12 +3,13 @@ import "server-only";
 import { getCmsPosts } from "@/lib/cms/posts";
 import { getAllDocs, getPosts, toPostSummary, type PostSummary } from "@/lib/content";
 import type { BlogRow } from "@/lib/cms/types";
+import { toBlogCategory } from "@/lib/blog-categories";
 
 export const FALLBACK_IMAGE = "/og-image.png";
 
 const APP_ROUTE_SLUGS = [
-  "about", "admin", "api", "appointment", "blog", "brain-surgery", "conditions",
-  "contact", "contact-us", "fellowship", "news-awards", "spine-surgery", "tag", "testimonials",
+  "about", "admin", "api", "appointment", "blog", "brain-surgery", "brain-tumor", "conditions",
+  "contact", "contact-us", "fellowship", "news-awards", "spine-surgery", "surgeries", "tag", "testimonials",
 ] as const;
 
 let reservedSlugs: Set<string> | null = null;
@@ -36,7 +37,7 @@ export function cmsToSummary(post: BlogRow): PostSummary {
   return {
     slug: post.slug,
     title: post.title,
-    ...(post.category ? { category: post.category } : {}),
+    ...(post.category ? { category: toBlogCategory(post.category) ?? post.category } : {}),
     excerpt: post.excerpt,
     readingTime: `${post.read_time} min read`,
     date: post.publish_at ?? "",

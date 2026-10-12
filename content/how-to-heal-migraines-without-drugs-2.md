@@ -5,7 +5,7 @@
 "modified": "2024-11-30 12:20:20"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Migraine"
 "tags": 
   - "paralysis"
   - "spinal-injury"

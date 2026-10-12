@@ -5,7 +5,7 @@
 "modified": "2024-09-25 16:10:53"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Neck"
 "tags": 
   - "paralysis"
   - "spinal-injury"

@@ -5,7 +5,7 @@
 "modified": "2025-10-06 20:21:13"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Tumour"
 "tags": []
 "author": "jayesh"
 "excerpt": "Experiencing recurring headaches and vision changes? Learn how these could signal a brain tumor and discover how surgery can provide effective treatment and relief."

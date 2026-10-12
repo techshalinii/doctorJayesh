@@ -5,7 +5,7 @@
 "modified": "2025-09-17 21:28:13"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Stroke"
 "tags": []
 "author": "jayesh"
 "excerpt": "FAST BeFAST Beyond the Acronym: Stress, Lifestyle, and Hidden Stroke Risks in Daily Life The FAST Rule Everyone Should Know Most people know the word FAST when it comes to stroke: F – Face drooping A – Arm weakness S – Speech trouble T – Time to act And yes, this acronym saves lives. If"

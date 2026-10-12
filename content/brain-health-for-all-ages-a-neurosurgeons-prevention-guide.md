@@ -5,7 +5,7 @@
 "modified": "2025-09-17 23:00:07"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Brain"
 "tags": []
 "author": "jayesh"
 "excerpt": "Brain Health for All Ages – A Neurosurgeon’s Prevention Guide A Guide for Every Stage of Life Your brain is the control centre of everything you do — thinking, feeling, remembering, and even breathing. Taking care of it is not something to start only in old age. From childhood through late adulthood, protecting brain health"

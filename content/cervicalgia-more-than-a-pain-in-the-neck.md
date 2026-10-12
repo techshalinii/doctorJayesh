@@ -5,7 +5,7 @@
 "modified": "2024-02-15 12:58:36"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Neck"
 "tags": 
   - "bad-posture"
   - "cervical-spine"

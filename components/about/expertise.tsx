@@ -23,7 +23,7 @@ export function AboutExpertise() {
         <div className="mt-12 grid gap-6 md:grid-cols-2">
           {aboutExpertise.map((e, i) => (
             <Reveal key={e.slug} delay={(i % 2) * 0.06} className="h-full">
-              <article className="group flex h-full flex-col rounded-3xl bg-white p-7 shadow-card ring-1 ring-navy-100 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-soft hover:ring-navy-200 sm:p-8 dark:bg-white/5 dark:ring-white/10">
+              <article className="group flex h-full flex-col bg-white p-7 shadow-card ring-1 ring-navy-100 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-soft hover:ring-navy-200 sm:p-8 dark:bg-white/5 dark:ring-white/10">
                 <div className="flex items-center gap-4">
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700 transition-colors duration-300 group-hover:bg-navy-900 group-hover:text-white dark:bg-white/10 dark:text-teal-300">
                     <Icon name={e.icon} className="h-5 w-5" />

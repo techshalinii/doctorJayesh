@@ -5,7 +5,7 @@
 "modified": "2025-07-21 12:33:40"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Nutrition"
 "tags": 
   - "paralysis"
   - "spinal-injury"

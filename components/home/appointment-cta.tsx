@@ -53,6 +53,7 @@ export function AppointmentCTA() {
                     <span>
                       <span className="block font-medium text-white">{l.name}</span>
                       {l.address}
+                      {l.hours && <span className="mt-1 block text-teal-200">{l.hours}</span>}
                     </span>
                   </div>
                 ))}

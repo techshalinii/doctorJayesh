@@ -1,12 +1,13 @@
 "use client";
-
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import type { PostSummary } from "@/lib/content";
 import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
+import { BLOG_CATEGORIES } from "@/lib/blog-categories";
+import { Arrow } from "@/components/ui/arrow";
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
@@ -36,7 +37,7 @@ function PostCard({ post }: { post: PostSummary }) {
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">{post.excerpt}</p>
         <div className="mt-4 flex items-center justify-between text-xs text-muted">
           <span>{formatDate(post.date)}</span>
-          <ArrowUpRight className="h-4 w-4 text-teal-600 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 dark:text-teal-400" />
+          <Arrow className="text-teal-600 dark:text-teal-400" />
         </div>
       </div>
     </Link>
@@ -75,7 +76,7 @@ function Pagination({
         aria-label="Previous page"
         className={cn(pill, "gap-1.5 px-3 sm:px-4 disabled:pointer-events-none disabled:opacity-50")}
       >
-        <ChevronLeft className="h-4 w-4" />
+        <Arrow direction="left" />
         <span className="hidden sm:inline">Previous</span>
       </button>
 
@@ -113,7 +114,7 @@ function Pagination({
         className={cn(pill, "gap-1.5 px-3 sm:px-4 disabled:pointer-events-none disabled:opacity-50")}
       >
         <span className="hidden sm:inline">Next</span>
-        <ChevronRight className="h-4 w-4" />
+        <Arrow />
       </button>
     </nav>
   );
@@ -132,26 +133,34 @@ export function PostsExplorer({
   showControls?: boolean;
   pageSize?: number;
 }) {
-  const categories = useMemo(
-    () => ["All", ...Array.from(new Set(allPosts.map((p) => p.category).filter(Boolean) as string[]))],
-    [allPosts],
-  );
+  const counts = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of allPosts) if (p.category) map.set(p.category, (map.get(p.category) ?? 0) + 1);
+    return map;
+  }, [allPosts]);
+  const categories = useMemo(() => {
+    const known = new Set<string>(BLOG_CATEGORIES);
+    const extra = [...counts.keys()].filter((c) => !known.has(c)).sort();
+    return ["All", ...BLOG_CATEGORIES, ...extra];
+  }, [counts]);
   const [active, setActive] = useState<string>("All");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const listTop = useRef<HTMLDivElement>(null);
 
-  const featured = showFeatured ? allPosts.find((p) => p.featured) : undefined;
+  const unfiltered = active === "All" && !query.trim();
+  const featured = showFeatured && unfiltered && page === 1 ? allPosts.find((p) => p.featured) : undefined;
 
   const filtered = useMemo(() => {
-    let list = allPosts.filter((p) => (featured ? p.slug !== featured.slug : true));
+    const pinned = showFeatured && unfiltered ? allPosts.find((p) => p.featured) : undefined;
+    let list = allPosts.filter((p) => (pinned ? p.slug !== pinned.slug : true));
     if (active !== "All") list = list.filter((p) => p.category === active);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((p) => p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q));
     }
     return limit ? list.slice(0, limit) : list;
-  }, [allPosts, active, query, featured, limit]);
+  }, [allPosts, active, query, showFeatured, unfiltered, limit]);
 
   const totalPages = pageSize ? Math.max(1, Math.ceil(filtered.length / pageSize)) : 1;
   const current = Math.min(page, totalPages);
@@ -164,7 +173,7 @@ export function PostsExplorer({
 
   return (
     <div>
-      {featured && current === 1 && (
+      {featured && (
         <Link
           href={`/${featured.slug}/`}
           className="group mb-16 grid gap-8 md:grid-cols-2 md:items-center md:gap-12"
@@ -191,47 +200,55 @@ export function PostsExplorer({
             <p className="mt-4 max-w-2xl text-muted">{featured.excerpt}</p>
             <span className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-navy-800 dark:text-white/80">
               Read the full article
-              <ArrowRight className="h-4 w-4 text-teal-600 transition-transform group-hover:translate-x-1 dark:text-teal-400" />
+              <Arrow className="text-teal-600 dark:text-teal-400" />
             </span>
           </div>
         </Link>
       )}
 
-      <div
-        ref={listTop}
-        className={cn("mb-2 flex-col gap-5 sm:flex-row sm:items-center sm:justify-between", showControls ? "flex" : "hidden")}
-      >
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          {categories.map((c) => (
-            <button
-              key={c}
-              onClick={() => {
-                setActive(c);
+      <div ref={listTop} className={cn("mb-2 flex-col gap-5", showControls ? "flex" : "hidden")}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <h2 className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-300">
+            Browse by topic
+          </h2>
+          <div className="relative sm:w-64">
+            <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
                 setPage(1);
               }}
-              className={cn(
-                "border-b-2 pb-1 text-sm font-medium transition-colors",
-                active === c
-                  ? "border-teal-500 text-navy-900 dark:text-white"
-                  : "border-transparent text-muted hover:text-navy-800 dark:hover:text-white",
-              )}
-            >
-              {c}
-            </button>
-          ))}
+              placeholder="Search articles"
+              aria-label="Search articles"
+              className="w-full border-b border-border bg-transparent py-2 pl-7 pr-2 text-sm outline-none transition-colors placeholder:text-muted/70 focus:border-teal-500"
+            />
+          </div>
         </div>
-        <div className="relative sm:w-60">
-          <Search className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Search articles"
-            aria-label="Search articles"
-            className="w-full border-b border-border bg-transparent py-2 pl-7 pr-2 text-sm outline-none transition-colors placeholder:text-muted/70 focus:border-teal-500"
-          />
+
+        <div role="group" aria-label="Filter articles by category" className="flex flex-wrap gap-2">
+          {categories.map((c) => {
+            const isActive = active === c;
+            return (
+              <button
+                key={c}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => {
+                  setActive(c);
+                  setPage(1);
+                }}
+                className={cn(
+                  "inline-flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-navy-900 text-white dark:bg-white dark:text-navy-950"
+                    : "bg-surface-2 text-navy-900 hover:bg-navy-100 dark:text-white/85 dark:hover:bg-white/10",
+                )}
+              >
+                {c}
+              </button>
+            );
+          })}
         </div>
       </div>
 

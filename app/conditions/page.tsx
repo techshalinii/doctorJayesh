@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { BreadcrumbJsonLd, JsonLd } from "@/components/seo/json-ld";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { PageHero } from "@/components/ui/page-hero";
 import { Reveal } from "@/components/ui/reveal";
 import { CtaBand } from "@/components/ui/cta-band";
 import { conditions } from "@/lib/data";
+import { Arrow } from "@/components/ui/arrow";
 
 export const metadata: Metadata = pageMetadata({
   path: "/conditions",
@@ -53,7 +53,7 @@ export default function ConditionsPage() {
                     className="group mt-6 inline-flex items-center gap-2 text-sm font-medium text-navy-800 dark:text-white/80"
                   >
                     Explore treatment
-                    <ArrowRight className="h-4 w-4 text-teal-600 transition-transform group-hover:translate-x-1 dark:text-teal-400" />
+                    <Arrow className="text-teal-600 dark:text-teal-400" />
                   </Link>
                 </div>
               </div>

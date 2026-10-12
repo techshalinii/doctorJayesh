@@ -5,7 +5,7 @@
 "modified": "2023-12-09 08:05:00"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Tumour"
 "tags": []
 "author": "jayesh"
 "excerpt": "In India, the prevalence of central nervous system (CNS) tumors ranges from 5 to 10 per 100,000 population with an increasing trend. Out of these, only 2 percent of the tumours turn cancerous. A brain tumour is a growth of cells in the brain or abnormal mass of tissue that multiplies in an uncontrollable way. More than 150 different"

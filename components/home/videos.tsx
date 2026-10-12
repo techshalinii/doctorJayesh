@@ -1,10 +1,10 @@
-import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
 import { VideoEmbed } from "@/components/ui/video-embed";
 import { Button } from "@/components/ui/button";
 import { videos } from "@/lib/data";
+import { Arrow } from "@/components/ui/arrow";
 
 const PLAYLIST_URL = "https://www.youtube.com/playlist?list=PLZqn4r4wue_0dhT21fIrR8fkYEU05GQ_E";
 
@@ -36,7 +36,7 @@ export function Videos() {
           rel="noopener noreferrer"
         >
           Watch more on YouTube
-          <ArrowUpRight className="h-4 w-4" aria-hidden />
+          <Arrow />
           <span className="sr-only">(opens in a new tab)</span>
         </Button>
       </Container>

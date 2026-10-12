@@ -5,7 +5,7 @@
 "modified": "2025-09-30 00:06:07"
 "postType": "post"
 "categories": 
-  - "uncategorized"
+  - "Parkinson"
 "tags": 
   - "nightmares"
   - "parkinsons-disease"

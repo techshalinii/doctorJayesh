@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { BreadcrumbJsonLd, JsonLd } from "@/components/seo/json-ld";
-import { Star } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { PageHero } from "@/components/ui/page-hero";
-import { Reveal } from "@/components/ui/reveal";
 import { CtaBand } from "@/components/ui/cta-band";
 import { GoogleReviews } from "@/components/testimonials/google-reviews";
-import { googleReviews, doctor } from "@/lib/data";
+import { doctor } from "@/lib/data";
 
 export const metadata: Metadata = pageMetadata({
   path: "/testimonials",
@@ -16,8 +14,6 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default function TestimonialsPage() {
-  const featured = googleReviews[0];
-
   return (
     <>
       <JsonLd />
@@ -31,21 +27,11 @@ export default function TestimonialsPage() {
         eyebrow="Patient Stories"
         breadcrumb="Testimonials"
         title="Real journeys, real recoveries"
-        description={`Behind our ${doctor.rating.toFixed(1)}★ rating from ${doctor.reviews} Google reviews are thousands of people who got their lives back.`}
       />
 
       <section className="border-t border-border bg-surface/50 py-14 lg:py-18">
         <Container>
-          <span className="flex items-center gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-300">
-            <span className="h-px w-8 bg-teal-600/50" /> What Patients Say
-          </span>
-          <h2 className="mt-5 mb-10 font-display text-[2rem] font-medium leading-tight text-navy-900 dark:text-white">
-            Reviews from Google
-          </h2>
           <GoogleReviews />
-          <p className="mt-10 text-xs text-muted">
-            Reviews shown are real, published verbatim from the practice&apos;s Google Business profile.
-          </p>
         </Container>
       </section>
 
